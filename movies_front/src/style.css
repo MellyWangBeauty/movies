@@ -1,0 +1,14 @@
+/* CSS Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* 使得元素的宽高包括 padding 和 border */
+}
+
+html,
+body {
+  height: 100%; /* 设置 body 和 html 的高度为 100%，便于设置背景等 */
+  background-color: rgba(17, 19, 25);
+  font-size: 16px;
+  color: #fff;
+}
