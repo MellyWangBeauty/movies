@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import { createPinia } from 'pinia'
 import "./style.css";
-import router from "./router.js";
+import router from "./router";
 import App from "./App.vue";
 import "element-plus/dist/index.css";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue"; // 引入所有图标
