@@ -110,12 +110,14 @@ async def parse(html):
         # 提取导演信息
         if "导演:" in detail_text:
             director_info = detail_text.split("导演:")[1].split("主演:")[0].strip()  # 获取导演信息
-            director_description = director_info.split(' ')[0]  # 取导演的名字部分
+            director_description = director_info.split(' ')[0]  # 取导演的中文名字部分
 
         # 提取主演信息
         if "主演:" in detail_text:
             leader_info = detail_text.split("主演:")[1].strip()  # 获取主演信息
-            leader = leader_info.split('/')[0].strip()  # 取主演的名字部分
+            leader = leader_info.split('/')[0].strip()  # 取主演的中文名字部分
+            # 只提取中文部分，直到遇到空格或其他字符
+            leader = ''.join(filter(lambda x: '\u4e00' <= x <= '\u9fa5', leader))  # 过滤出中文字符
         
         # 创建 Movie 对象并添加到列表
         movies.append(Movie(
