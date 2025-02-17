@@ -10,17 +10,17 @@
       </div>
       <div v-else class="movie-sections">
         <MovieSection 
-          title="热门" 
+          title="近期热门" 
           :movies="hotMovies" 
           more-link="/hot" 
         />
         <MovieSection 
-          title="排行" 
+          title="豆瓣排行" 
           :movies="rankedMovies" 
           more-link="/rank" 
         />
         <MovieSection 
-          title="推荐" 
+          title="个性推荐" 
           :movies="recommendedMovies" 
           more-link="/recommend" 
         />
