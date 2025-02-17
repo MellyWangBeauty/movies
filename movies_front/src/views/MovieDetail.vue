@@ -27,74 +27,74 @@
     </div>
   </div>
   <div v-else class="loading">
-    加载中...
+    <el-skeleton :rows="10" animated />
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue'
+<script setup>
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import request from '@/request'
+import axios from 'axios'
 
-export default {
-  name: 'MovieDetail',
-  setup() {
-    const route = useRoute()
-    const movie = ref(null)
+const route = useRoute()
+const movie = ref(null)
 
-    const fetchMovieDetail = async () => {
-      try {
-        const response = await request.get(`/movies/${route.params.id}`)
-        movie.value = response.data
-        // 增加浏览量
-        await request.put(`/movies/${route.params.id}/view`)
-      } catch (error) {
-        console.error('Error fetching movie details:', error)
-      }
-    }
+const movieTags = computed(() => {
+  if (!movie.value?.tags) return []
+  return movie.value.tags.split('/')
+})
 
-    const movieTags = computed(() => {
-      if (!movie.value?.tags) return []
-      return movie.value.tags.split('/')
-    })
-
-    onMounted(() => {
-      fetchMovieDetail()
-    })
-
-    return {
-      movie,
-      movieTags
-    }
+const fetchMovieDetail = async () => {
+  try {
+    const response = await axios.get(`/api/movies/${route.params.id}`)
+    movie.value = response.data
+  } catch (error) {
+    console.error('Error fetching movie details:', error)
   }
 }
+
+onMounted(() => {
+  fetchMovieDetail()
+})
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .movie-detail {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  color: #fff;
 }
 
 .movie-header {
   display: flex;
   gap: 30px;
   margin-bottom: 40px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 }
 
 .movie-poster {
   flex-shrink: 0;
   width: 300px;
   height: 450px;
-}
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    height: auto;
+    max-width: 300px;
+    margin: 0 auto;
+  }
 
-.movie-poster img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
 }
 
 .movie-info {
@@ -104,68 +104,68 @@ export default {
 .movie-title {
   font-size: 28px;
   margin-bottom: 20px;
-  color: #333;
+  color: #fff;
 }
 
 .movie-meta {
   margin-bottom: 20px;
-}
 
-.movie-meta span {
-  margin-right: 20px;
-  color: #666;
+  span {
+    margin-right: 20px;
+    color: #ccc;
+  }
 }
 
 .rating {
-  color: #e09015;
+  color: #ffd04b;
   font-weight: bold;
 }
 
 .movie-crew {
   margin-bottom: 20px;
-}
 
-.movie-crew p {
-  margin: 10px 0;
-  color: #666;
+  p {
+    margin: 10px 0;
+    color: #ccc;
+  }
 }
 
 .movie-tags {
   margin-bottom: 30px;
-}
 
-.tag-label {
-  color: #666;
-  margin-right: 10px;
-}
+  .tag-label {
+    color: #ccc;
+    margin-right: 10px;
+  }
 
-.tag {
-  display: inline-block;
-  padding: 4px 12px;
-  margin: 0 8px 8px 0;
-  background: #f5f5f5;
-  border-radius: 15px;
-  color: #666;
-  font-size: 14px;
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    margin: 0 8px 8px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    color: #fff;
+    font-size: 14px;
+  }
 }
 
 .movie-description {
-  color: #333;
-}
+  color: #fff;
 
-.movie-description h3 {
-  margin-bottom: 15px;
-  font-size: 20px;
-}
+  h3 {
+    margin-bottom: 15px;
+    font-size: 20px;
+  }
 
-.movie-description p {
-  line-height: 1.6;
-  color: #666;
+  p {
+    line-height: 1.6;
+    color: #ccc;
+  }
 }
 
 .loading {
-  text-align: center;
-  padding: 50px;
-  color: #666;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
 }
 </style> 
