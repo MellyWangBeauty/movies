@@ -15,30 +15,48 @@
         />
         <div class="movie-grid">
           <MovieCard 
-            v-for="movie in filteredMovies" 
+            v-for="movie in displayedMovies" 
             :key="movie.id" 
             :movie="movie"
           />
         </div>
+        <MoviePagination 
+          :total="filteredMovies.length"
+          @update="handlePagination"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import MovieCard from '../components/MovieCard.vue'
 import MovieFilter from '../components/MovieFilter.vue'
+import MoviePagination from '../components/MoviePagination.vue'
 
 const movies = ref([])
 const filteredMovies = ref([])
 const loading = ref(true)
 const error = ref(null)
+const paginationInfo = ref({
+  start: 0,
+  end: 24,
+  pageSize: 24
+})
+
+const displayedMovies = computed(() => {
+  return filteredMovies.value.slice(paginationInfo.value.start, paginationInfo.value.end)
+})
 
 const handleFilter = (filtered) => {
   filteredMovies.value = filtered
+}
+
+const handlePagination = (info) => {
+  paginationInfo.value = info
 }
 
 const fetchMovies = async () => {
@@ -46,7 +64,7 @@ const fetchMovies = async () => {
   error.value = null
   
   try {
-    const response = await axios.get('/api/movies/hot?limit=24')
+    const response = await axios.get('/api/movies/hot')
     movies.value = response.data
     filteredMovies.value = response.data
   } catch (err) {
