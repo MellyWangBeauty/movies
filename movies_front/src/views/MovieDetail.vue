@@ -1,157 +1,171 @@
 <template>
   <div class="movie-detail" v-if="movie">
     <div class="movie-header">
-      <div class="movie-cover">
-        <el-image 
-          :src="movie.cover_image" 
-          :alt="movie.title"
-          fit="cover"
-        >
-          <template #error>
-            <div class="image-error">
-              <el-icon><Picture /></el-icon>
-            </div>
-          </template>
-        </el-image>
+      <div class="movie-poster">
+        <img :src="movie.cover_image" :alt="movie.title">
       </div>
       <div class="movie-info">
-        <h1 class="title">{{ movie.title }}</h1>
-        <div class="meta">
-          <div class="rating">
-            <el-rate
-              v-model="movie.rating"
-              disabled
-              show-score
-              text-color="#ff9900"
-              score-template="{value}"
-            />
-          </div>
-          <div class="release-date">
-            上映日期：{{ formatDate(movie.release_date) }}
-          </div>
-          <div class="category">
-            类型：{{ movie.category }}
-          </div>
-          <div class="view-count">
-            浏览量：{{ movie.view_count }}
-          </div>
+        <h1 class="movie-title">{{ movie.title }}</h1>
+        <div class="movie-meta">
+          <span class="rating">豆瓣评分：{{ movie.rating }}</span>
+          <span class="year">年份：{{ movie.years }}</span>
+          <span class="country">制片国家：{{ movie.country }}</span>
         </div>
-        <div class="description">
+        <div class="movie-crew">
+          <p class="director">导演：{{ movie.director_description }}</p>
+          <p class="cast">主演：{{ movie.leader }}</p>
+        </div>
+        <div class="movie-tags">
+          <span class="tag-label">标签：</span>
+          <span class="tag" v-for="tag in movieTags" :key="tag">{{ tag }}</span>
+        </div>
+        <div class="movie-description">
           <h3>剧情简介</h3>
           <p>{{ movie.description }}</p>
         </div>
       </div>
     </div>
   </div>
+  <div v-else class="loading">
+    加载中...
+  </div>
 </template>
 
-<script setup>
+<script>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import axios from 'axios'
-import { Picture } from '@element-plus/icons-vue'
+import request from '@/request'
 
-const route = useRoute()
-const movie = ref(null)
+export default {
+  name: 'MovieDetail',
+  setup() {
+    const route = useRoute()
+    const movie = ref(null)
 
-// 格式化日期
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+    const fetchMovieDetail = async () => {
+      try {
+        const response = await request.get(`/movies/${route.params.id}`)
+        movie.value = response.data
+        // 增加浏览量
+        await request.put(`/movies/${route.params.id}/view`)
+      } catch (error) {
+        console.error('Error fetching movie details:', error)
+      }
+    }
 
-// 获取电影详情
-const fetchMovieDetail = async () => {
-  try {
-    const response = await axios.get(`/api/movies/${route.params.id}`)
-    movie.value = response.data
-  } catch (error) {
-    ElMessage.error('获取电影详情失败')
-    console.error('获取电影详情失败:', error)
+    const movieTags = computed(() => {
+      if (!movie.value?.tags) return []
+      return movie.value.tags.split('/')
+    })
+
+    onMounted(() => {
+      fetchMovieDetail()
+    })
+
+    return {
+      movie,
+      movieTags
+    }
   }
 }
-
-onMounted(() => {
-  fetchMovieDetail()
-})
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .movie-detail {
   max-width: 1200px;
-  margin: 30px auto;
-  padding: 0 20px;
-  color: #fff;
+  margin: 0 auto;
+  padding: 20px;
+}
 
-  .movie-header {
-    display: flex;
-    gap: 40px;
+.movie-header {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
 
-    .movie-cover {
-      flex-shrink: 0;
-      width: 300px;
-      height: 450px;
-      border-radius: 8px;
-      overflow: hidden;
+.movie-poster {
+  flex-shrink: 0;
+  width: 300px;
+  height: 450px;
+}
 
-      .el-image {
-        width: 100%;
-        height: 100%;
-      }
+.movie-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
-      .image-error {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f5f7fa;
-        color: #909399;
-        font-size: 30px;
-      }
-    }
+.movie-info {
+  flex: 1;
+}
 
-    .movie-info {
-      flex-grow: 1;
+.movie-title {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #333;
+}
 
-      .title {
-        font-size: 32px;
-        margin: 0 0 20px;
-      }
+.movie-meta {
+  margin-bottom: 20px;
+}
 
-      .meta {
-        margin-bottom: 30px;
+.movie-meta span {
+  margin-right: 20px;
+  color: #666;
+}
 
-        > div {
-          margin-bottom: 10px;
-          font-size: 16px;
-          color: rgba(255, 255, 255, 0.8);
-        }
+.rating {
+  color: #e09015;
+  font-weight: bold;
+}
 
-        .rating {
-          margin-bottom: 20px;
-        }
-      }
+.movie-crew {
+  margin-bottom: 20px;
+}
 
-      .description {
-        h3 {
-          font-size: 20px;
-          margin: 0 0 15px;
-        }
+.movie-crew p {
+  margin: 10px 0;
+  color: #666;
+}
 
-        p {
-          font-size: 16px;
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.8);
-          margin: 0;
-        }
-      }
-    }
-  }
+.movie-tags {
+  margin-bottom: 30px;
+}
+
+.tag-label {
+  color: #666;
+  margin-right: 10px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  margin: 0 8px 8px 0;
+  background: #f5f5f5;
+  border-radius: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+.movie-description {
+  color: #333;
+}
+
+.movie-description h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.movie-description p {
+  line-height: 1.6;
+  color: #666;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  color: #666;
 }
 </style> 
