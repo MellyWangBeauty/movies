@@ -18,7 +18,7 @@
           <p class="leader" v-else>主演：{{ movie.leader }}</p>
         </div>
         <div class="movie-tags">
-          <span class="tag-label">标签：</span>
+          <span class="tag-label">类型：</span>
           <span class="tag" v-for="tag in movieTags" :key="tag">{{ tag }}</span>
         </div>
         <div class="movie-description">
