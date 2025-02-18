@@ -17,71 +17,74 @@ db_config = {
 
 # 代理池
 PROXIES = [
-    {
-        "ip": "113.229.3.77",
-        "port": 41620
+       {
+        "ip": "125.125.238.72",
+        "port": 59848
       },
       {
-        "ip": "27.156.193.71",
-        "port": 18180
+        "ip": "119.102.186.88",
+        "port": 33661
       },
       {
-        "ip": "223.240.162.161",
-        "port": 28670
+        "ip": "121.205.213.146",
+        "port": 45183
       },
       {
-        "ip": "42.84.92.239",
-        "port": 10072
+        "ip": "123.55.163.163",
+        "port": 26200
       },
       {
-        "ip": "116.208.206.229",
-        "port": 43248
+        "ip": "117.69.10.241",
+        "port": 51958
       },
       {
-        "ip": "116.139.127.149",
-        "port": 17305
+        "ip": "119.41.200.1",
+        "port": 53218
       },
       {
-        "ip": "110.82.143.64",
-        "port": 25813
+        "ip": "121.224.217.232",
+        "port": 49083
       },
       {
-        "ip": "42.56.40.217",
-        "port": 34900
+        "ip": "122.241.237.130",
+        "port": 40335
       },
       {
-        "ip": "223.240.209.149",
-        "port": 27943
+        "ip": "119.101.108.81",
+        "port": 40013
       },
       {
-        "ip": "27.150.90.158",
-        "port": 49587
+        "ip": "116.209.52.52",
+        "port": 50951
       }
 ]
 
 class ProxyManager:
     def __init__(self, proxies: List[Dict[str, str]]):
         self.proxies = proxies
-        self.failed_proxies = {}  # 记录代理失败次数
+        self.failed_proxies = set()  # 改用set存储失败的代理
         self.lock = asyncio.Lock()
+        self.current_index = 0  # 用于轮换代理
 
     async def get_proxy(self) -> Optional[str]:
         async with self.lock:
             available_proxies = [p for p in self.proxies 
-                               if self.failed_proxies.get(f"{p['ip']}:{p['port']}", 0) < 3]
+                               if f"{p['ip']}:{p['port']}" not in self.failed_proxies]
             if not available_proxies:
                 print("警告：没有可用的代理！")
                 return None
-            proxy = random.choice(available_proxies)
+            
+            # 轮换使用代理
+            self.current_index = (self.current_index + 1) % len(available_proxies)
+            proxy = available_proxies[self.current_index]
             return f"http://{proxy['ip']}:{proxy['port']}"
 
     async def mark_proxy_failed(self, proxy: str):
         async with self.lock:
-            self.failed_proxies[proxy] = self.failed_proxies.get(proxy, 0) + 1
-            if self.failed_proxies[proxy] >= 3:
-                print(f"代理 {proxy} 已失败3次，将被移除")
-                self.proxies = [p for p in self.proxies 
-                              if f"{p['ip']}:{p['port']}" != proxy]
+            self.failed_proxies.add(proxy)
+            print(f"代理 {proxy} 失败，已移除")
+            self.proxies = [p for p in self.proxies 
+                          if f"{p['ip']}:{p['port']}" not in self.failed_proxies]
 
 proxy_manager = ProxyManager(PROXIES)
 
@@ -164,7 +167,7 @@ def parse_movie_detail(html):
         if comment:
             comment_text = comment.text.strip()
         else:
-            comment_text = "无评论"  # 或者其他默认值
+            comment_text = ""  # 或者其他默认值
         comments.append(comment_text)
     
     # 补齐5条短评
@@ -278,18 +281,30 @@ def create_details_table():
     except Exception as e:
         print(f"创建数据表失败: {str(e)}")
 
+def delete_empty_duration_records():
+    """删除数据库中duration为空的记录"""
+    try:
+        sql = """
+            DELETE FROM movie_details 
+            WHERE duration IS NULL OR duration = ''
+        """
+        affected_rows = db_manager.execute_query(sql)
+        print(f"已删除无效记录")
+    except Exception as e:
+        print(f"删除空duration记录失败: {str(e)}")
+
 # 处理单个电影
 async def process_movie(douban_id: str, semaphore: asyncio.Semaphore) -> None:
     async with semaphore:
-        async with aiohttp.ClientSession() as session:  # 添加session创建
+        async with aiohttp.ClientSession() as session:
             url = f'https://movie.douban.com/subject/{douban_id}/'
             html = await fetch(session, url)
             if html:
                 detail = parse_movie_detail(html)
                 if detail:
                     if save_movie_detail(douban_id, detail):
-                        # 成功保存后随机等待2-4秒
-                        await asyncio.sleep(random.uniform(2, 4))
+                        # 成功保存后随机等待0.5-1秒
+                        await asyncio.sleep(random.uniform(0.5, 1))
                     else:
                         print(f"保存电影 {douban_id} 失败，跳过")
                 else:
@@ -303,6 +318,9 @@ async def main():
         # 创建数据表
         create_details_table()
         
+        # 删除duration为空的记录
+        delete_empty_duration_records()
+        
         # 获取需要爬取的电影ID
         douban_ids = get_movies_to_crawl()
         if not douban_ids:
@@ -311,18 +329,18 @@ async def main():
             
         print(f"需要爬取 {len(douban_ids)} 部电影")
         
-        # 限制并发数为2，降低被封禁风险
-        semaphore = asyncio.Semaphore(2)
+        # 增加并发数为5，因为有足够多的代理IP
+        semaphore = asyncio.Semaphore(5)
         
-        # 创建任务列表并分批执行，每批20个
-        batch_size = 20
+        # 创建任务列表并分批执行，每批30个
+        batch_size = 30
         for i in range(0, len(douban_ids), batch_size):
             batch = douban_ids[i:i + batch_size]
             tasks = [process_movie(douban_id, semaphore) for douban_id in batch]
             await asyncio.gather(*tasks)
             print(f"完成第{i//batch_size + 1}批爬取")
-            # 批次间等待
-            await asyncio.sleep(5)
+            # 批次间等待时间缩短到2秒
+            await asyncio.sleep(2)
     finally:
         # 清理资源
         db_manager.close()
