@@ -11,8 +11,8 @@ router = APIRouter()
 
 @router.get("/hot", response_model=List[MovieSchema])
 async def get_hot_movies(limit: Optional[int] = None, db: Session = Depends(get_db)):
-    """获取热门电影（按评分排序）"""
-    query = db.query(Movie).order_by(Movie.rating.desc())
+    """获取热门电影（按年份排序）"""
+    query = db.query(Movie).order_by(Movie.years.desc())
     if limit:
         query = query.limit(limit)
     return query.all()
