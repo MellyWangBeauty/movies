@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class MovieBase(BaseModel):
     title: str
@@ -19,6 +19,19 @@ class MovieCreate(MovieBase):
 class Movie(MovieBase):
     id: int
     view_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+class MovieDetail(Movie):
+    actors: Optional[str] = None
+    plot: Optional[str] = None
+    duration: Optional[str] = None
+    comment1: Optional[str] = None
+    comment2: Optional[str] = None
+    comment3: Optional[str] = None
+    comment4: Optional[str] = None
+    comment5: Optional[str] = None
 
     class Config:
         from_attributes = True

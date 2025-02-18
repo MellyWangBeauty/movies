@@ -8,12 +8,14 @@
         <h1 class="movie-title">{{ movie.title }}</h1>
         <div class="movie-meta">
           <span class="rating">豆瓣评分：{{ movie.rating }}</span>
+          <span class="duration" v-if="movie.duration">片长：{{ movie.duration }}分钟</span>
           <span class="year">年份：{{ movie.years }}</span>
           <span class="country">制片国家：{{ movie.country }}</span>
         </div>
         <div class="movie-crew">
           <p class="director">导演：{{ movie.director_description }}</p>
-          <p class="cast">主演：{{ movie.leader }}</p>
+          <p class="actors" v-if="movie.actors">主演：{{ formatActors }}</p>
+          <p class="leader" v-else>主演：{{ movie.leader }}</p>
         </div>
         <div class="movie-tags">
           <span class="tag-label">标签：</span>
@@ -21,7 +23,20 @@
         </div>
         <div class="movie-description">
           <h3>剧情简介</h3>
-          <p>{{ movie.description }}</p>
+          <p>{{ movie.plot || movie.description }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 短评区域 -->
+    <div class="movie-comments" v-if="hasComments">
+      <h2>精选短评 ({{ movieComments.length }}条)</h2>
+      <div class="comments-grid">
+        <div class="comment-card" v-for="(comment, index) in movieComments" :key="index">
+          <div class="comment-header">
+            <span class="comment-index">短评 {{ index + 1 }}</span>
+          </div>
+          <p class="comment-content">{{ comment }}</p>
         </div>
       </div>
     </div>
@@ -42,6 +57,28 @@ const movie = ref(null)
 const movieTags = computed(() => {
   if (!movie.value?.tags) return []
   return movie.value.tags.split('/')
+})
+
+const formatActors = computed(() => {
+  if (!movie.value?.actors) return ''
+  return movie.value.actors.replace(/\|/g, '、')
+})
+
+const movieComments = computed(() => {
+  if (!movie.value) return []
+  const comments = [
+    movie.value.comment1,
+    movie.value.comment2,
+    movie.value.comment3,
+    movie.value.comment4,
+    movie.value.comment5
+  ]
+  // 过滤掉null、undefined和空字符串
+  return comments.filter(comment => comment && comment.trim() !== '')
+})
+
+const hasComments = computed(() => {
+  return movieComments.value.length > 0
 })
 
 const fetchMovieDetail = async () => {
@@ -160,6 +197,49 @@ onMounted(() => {
   p {
     line-height: 1.6;
     color: #ccc;
+  }
+}
+
+.movie-comments {
+  margin-top: 40px;
+  
+  h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #fff;
+  }
+  
+  .comments-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .comment-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    
+    .comment-header {
+      margin-bottom: 10px;
+      
+      .comment-index {
+        color: var(--el-color-primary);
+        font-size: 14px;
+      }
+    }
+    
+    .comment-content {
+      color: #ccc;
+      line-height: 1.6;
+      margin: 0;
+      font-size: 15px;
+      text-indent: 2em;
+    }
   }
 }
 

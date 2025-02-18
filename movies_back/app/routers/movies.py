@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from ..database import get_db
 from ..models.movie import Movie
-from ..schemas.movie import Movie as MovieSchema
+from ..schemas.movie import Movie as MovieSchema, MovieDetail
 
 router = APIRouter()
 
@@ -33,15 +33,41 @@ async def get_recommended_movies(limit: Optional[int] = None, db: Session = Depe
         query = query.limit(limit)
     return query.all()
 
-@router.get("/{movie_id}", response_model=MovieSchema)
+@router.get("/{movie_id}", response_model=MovieDetail)
 async def get_movie_detail(movie_id: int, db: Session = Depends(get_db)):
-    """获取电影详情"""
-    movie = db.query(Movie).filter(Movie.id == movie_id).first()
-    if movie is None:
-        raise HTTPException(status_code=404, detail="电影不存在")
-    
-    # 增加浏览量
-    movie.view_count += 1
-    db.commit()
-    
-    return movie 
+    """获取电影详情，包含基本信息和详细信息"""
+    try:
+        # 联合查询两个表
+        sql = """
+            SELECT 
+                m.id, m.douban_id, m.title, m.description, m.rating, 
+                m.leader, m.tags, m.years, m.country, m.director_description, 
+                m.cover_image, m.view_count,
+                d.actors, d.plot, d.duration, 
+                d.comment1, d.comment2, d.comment3, d.comment4, d.comment5
+            FROM movies_top250 m
+            LEFT JOIN movie_details d ON m.douban_id = d.douban_id
+            WHERE m.id = :movie_id
+        """
+        
+        result = db.execute(text(sql), {"movie_id": movie_id}).first()
+        
+        if result is None:
+            raise HTTPException(status_code=404, detail="电影不存在")
+        
+        # 转换为字典，使用result._mapping来获取列名和值的映射
+        movie_data = dict(result._mapping)
+        
+        # 更新浏览量
+        movie = db.query(Movie).filter(Movie.id == movie_id).first()
+        if movie:
+            movie.view_count += 1
+            db.commit()
+            # 更新返回数据中的浏览量
+            movie_data['view_count'] = movie.view_count
+        
+        return movie_data
+        
+    except Exception as e:
+        print(f"获取电影详情错误: {str(e)}")  # 添加错误日志
+        raise HTTPException(status_code=500, detail=f"获取电影详情失败: {str(e)}") 
