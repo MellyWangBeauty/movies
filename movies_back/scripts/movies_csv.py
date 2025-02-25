@@ -5,18 +5,8 @@ import pandas as pd
 from datetime import datetime
 import random
 import logging
-import pymysql
 from typing import List, Dict, Optional
 import os
-
-# 数据库配置
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'qaz741',
-    'database': 'movies_db',
-    'charset': 'utf8mb4'
-}
 
 # 配置日志
 logging.basicConfig(
@@ -34,84 +24,6 @@ class MovieCrawler:
         self.session = requests.Session()
         self.data_dir = 'data'
         self.ensure_data_dir()
-        self.db = None
-
-    def connect_db(self):
-        """连接数据库"""
-        if not self.db or not self.db.open:
-            self.db = pymysql.connect(**db_config)
-        return self.db
-
-    def close_db(self):
-        """关闭数据库连接"""
-        if self.db and self.db.open:
-            self.db.close()
-
-    def create_table(self):
-        """创建数据表（如果不存在）"""
-        connection = self.connect_db()
-        try:
-            with connection.cursor() as cursor:
-                sql = """
-                CREATE TABLE IF NOT EXISTS movies_top250 (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    douban_id VARCHAR(20) NOT NULL,
-                    title VARCHAR(200) NOT NULL,
-                    description TEXT,
-                    rating FLOAT,
-                    leader VARCHAR(100),
-                    tags VARCHAR(255),
-                    years VARCHAR(10),
-                    country VARCHAR(100),
-                    director_description VARCHAR(100),
-                    cover_image VARCHAR(500),
-                    view_count INT DEFAULT 0,
-                    INDEX idx_douban_id (douban_id)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                """
-                cursor.execute(sql)
-                connection.commit()
-        except Exception as e:
-            logging.error(f"创建表失败: {str(e)}")
-            connection.rollback()
-
-    def save_to_db(self, movie_data: Dict) -> bool:
-        """保存单条电影数据到数据库"""
-        connection = self.connect_db()
-        try:
-            with connection.cursor() as cursor:
-                # 检查是否已存在
-                check_sql = "SELECT douban_id FROM movies_top250 WHERE douban_id = %s"
-                cursor.execute(check_sql, (movie_data['douban_id'],))
-                if cursor.fetchone():
-                    return True  # 已存在，跳过
-
-                # 插入数据
-                sql = """
-                INSERT INTO movies_top250 (
-                    douban_id, title, description, rating, leader,
-                    tags, years, country, director_description, cover_image, view_count
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cursor.execute(sql, (
-                    movie_data['douban_id'],
-                    movie_data['title'],
-                    '',  # description 默认为空
-                    float(movie_data['rating']) if movie_data['rating'] else 0.0,
-                    '',  # leader 默认为空
-                    movie_data['tags'],
-                    movie_data['years'],
-                    movie_data['country'],
-                    movie_data['director_description'],
-                    movie_data['cover_image'],
-                    0  # view_count 默认为0
-                ))
-                connection.commit()
-                return True
-        except Exception as e:
-            logging.error(f"保存电影 {movie_data['title']} 失败: {str(e)}")
-            connection.rollback()
-            return False
 
     def ensure_data_dir(self):
         """确保数据目录存在"""
@@ -183,7 +95,7 @@ class MovieCrawler:
             if len(parts) >= 4:
                 processed['years'] = parts[0].strip()
                 processed['country'] = parts[1].strip()
-                processed['tags'] = parts[2].strip().replace(' ', '/')
+                processed['tags'] = parts[2].strip().replace(' ', '|')
                 processed['director_description'] = parts[3].strip()
         
         # 打印调试信息
@@ -201,7 +113,7 @@ class MovieCrawler:
             'count': '20',
             'selected_categories': '',
             'uncollect': 'false',
-            'tags': '2025',
+            'tags': ['2025','2024','2023','2022','2021','2020'],
             'sort': 'S'
         }
 
@@ -266,35 +178,25 @@ class MovieCrawler:
 
 def main():
     try:
+        # 创建爬虫实例
         crawler = MovieCrawler()
         
-        # 创建数据表
-        crawler.create_table()
-        
         # 获取电影数据
-        movies_data = crawler.get_movies_data(page_cnt=5)
+        logging.info("开始爬取电影数据...")
+        movies_data = crawler.get_movies_data(page_cnt=2)
         
         if movies_data:
-            # 保存到数据库
-            success_count = 0
-            skip_count = 0
-            for movie in movies_data:
-                if crawler.save_to_db(movie):
-                    success_count += 1
-                else:
-                    skip_count += 1
-            
-            print(f"\n数据已保存到数据库")
-            print(f"新增: {success_count} 条")
-            print(f"跳过: {skip_count} 条")
-            print("\n爬虫任务完成！")
+            # 保存到CSV
+            saved_file = crawler.save_to_csv(movies_data)
+            if saved_file:
+                logging.info("爬虫任务完成！")
+            else:
+                logging.error("保存数据失败！")
         else:
-            print("未获取到任何数据！")
+            logging.error("未获取到任何数据！")
             
     except Exception as e:
         logging.error(f"程序执行出错: {str(e)}")
-    finally:
-        crawler.close_db()
 
 if __name__ == '__main__':
     main()
