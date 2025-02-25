@@ -11,16 +11,29 @@
     </div>
     <div class="header-right">
       <div>
-        <el-input
-          v-model="input3"
+        <el-autocomplete
+          v-model="searchKeyword"
+          :fetch-suggestions="querySearchAsync"
           style="max-width: 600px"
-          placeholder="请输入关键字"
+          placeholder="请输入电影名称、导演、演员或标签"
           class="input-with-select"
+          clearable
+          @select="handleSelect"
+          @keyup.enter="handleSearch"
         >
           <template #append>
-            <el-button :icon="Search" />
+            <el-button :icon="Search" @click="handleSearch" />
           </template>
-        </el-input>
+          <template #default="{ item }">
+            <div class="suggestion-item">
+              <div class="title">{{ item.title }}</div>
+              <div class="info">
+                <span v-if="item.director_description">导演：{{ item.director_description }}</span>
+                <span v-if="item.rating">评分：{{ item.rating }}</span>
+              </div>
+            </div>
+          </template>
+        </el-autocomplete>
       </div>
       <div class="avatar-container">
         <el-dropdown v-if="userStore.isLoggedIn()" trigger="hover">
@@ -106,9 +119,41 @@
     gap: 40px; // 使用 gap 设置子元素之间的间距
     height: 30px;
 
-    .search-input {
-      width: 240px;
-      height: 25px;
+    .input-with-select {
+      :deep(.el-input-group__append) {
+        background-color: var(--el-color-primary);
+        border-color: var(--el-color-primary);
+        padding: 0 15px;
+        
+        .el-button {
+          color: #fff;
+          border: none;
+          margin: 0;
+          
+          &:hover {
+            color: #fff;
+            background-color: var(--el-color-primary-light-3);
+          }
+        }
+      }
+
+      :deep(.el-input__wrapper) {
+        background-color: rgba(255, 255, 255, 0.1);
+        box-shadow: none;
+        border: 1px solid transparent;
+
+        &:hover, &.is-focus {
+          background-color: rgba(255, 255, 255, 0.15);
+          border-color: var(--el-color-primary);
+        }
+
+        .el-input__inner {
+          color: #fff;
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+          }
+        }
+      }
     }
 
     .avatar-container {
@@ -147,35 +192,150 @@
   align-items: center;
   gap: 5px;
 }
+
+.input-with-select {
+  :deep(.el-input-group__append) {
+    background-color: var(--el-color-primary);
+    border-color: var(--el-color-primary);
+    padding: 0 15px;
+    
+    .el-button {
+      color: #fff;
+      border: none;
+      margin: 0;
+      
+      &:hover {
+        color: #fff;
+        background-color: var(--el-color-primary-light-3);
+      }
+    }
+  }
+
+  :deep(.el-input__wrapper) {
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+    border: 1px solid transparent;
+
+    &:hover, &.is-focus {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: var(--el-color-primary);
+    }
+
+    .el-input__inner {
+      color: #fff;
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+}
+
+:deep(.el-popper.el-autocomplete__popper) {
+  background: rgba(45, 45, 45, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+
+  .el-autocomplete-suggestion__wrap {
+    background: transparent;
+
+    .suggestion-item {
+      padding: 8px 0;
+      cursor: pointer;
+
+      .title {
+        color: #fff;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+
+      .info {
+        color: #999;
+        font-size: 12px;
+
+        span {
+          margin-right: 10px;
+        }
+      }
+    }
+
+    li {
+      background: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &.highlighted {
+        background: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+}
 </style>
 
 <script setup>
-import { ref } from "vue";
-import { UserFilled, User, SwitchButton, Key, Plus } from "@element-plus/icons-vue";
-import { Search } from "@element-plus/icons-vue";
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '../stores/user'
+import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { Search, UserFilled } from '@element-plus/icons-vue'
+import { User, Key, Plus, SwitchButton } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import LoginDialog from './LoginDialog.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const searchKeyword = ref('')
 const loginDialogVisible = ref(false)
-const input3 = ref('')
 const dialogMode = ref('login')
 
-const goToUserCenter = () => {
-  router.push('/user-center')
+const querySearchAsync = async (queryString, cb) => {
+  if (!queryString.trim()) {
+    cb([])
+    return
+  }
+
+  try {
+    console.log('发送搜索建议请求:', queryString.trim())  // 调试日志
+    const response = await axios.get('/api/movies/search', {
+      params: { keyword: queryString.trim() }
+    })
+    console.log('搜索建议结果:', response.data)  // 调试日志
+    
+    // 转换结果格式以适配 el-autocomplete
+    const suggestions = response.data.map(item => ({
+      value: item.title,
+      ...item
+    }))
+    cb(suggestions)
+  } catch (err) {
+    console.error('获取搜索建议失败:', err)
+    ElMessage.error('获取搜索建议失败，请重试')
+    cb([])
+  }
 }
 
-const handleLogout = async () => {
-  try {
-    await userStore.logout()
-    ElMessage.success('退出登录成功')
-    router.push('/')
-  } catch (error) {
-    ElMessage.error(error.message || '退出登录失败')
+const handleSelect = (item) => {
+  router.push(`/movie/${item.id}`)
+}
+
+const handleSearch = () => {
+  if (!searchKeyword.value.trim()) {
+    ElMessage.warning('请输入搜索关键词')
+    return
   }
+  
+  console.log('执行搜索:', searchKeyword.value.trim())  // 调试日志
+  router.push({
+    path: '/search',
+    query: { keyword: searchKeyword.value.trim() }
+  })
+  searchKeyword.value = ''  // 清空搜索框
 }
 
 const handleLogin = () => {
@@ -186,5 +346,14 @@ const handleLogin = () => {
 const handleRegister = () => {
   dialogMode.value = 'register'
   loginDialogVisible.value = true
+}
+
+const handleLogout = () => {
+  userStore.logout()
+  ElMessage.success('退出登录成功')
+}
+
+const goToUserCenter = () => {
+  router.push('/user')
 }
 </script>

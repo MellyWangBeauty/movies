@@ -40,6 +40,11 @@ const router = createRouter({
       name: 'user-center',
       component: UserCenter,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/search',
+      name: 'Search',
+      component: () => import('../views/Search.vue')
     }
   ]
 })

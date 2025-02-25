@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, text
 from typing import List, Optional
@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from ..database import get_db
 from ..models.movie import Movie
 from ..schemas.movie import Movie as MovieSchema, MovieDetail
+from sqlalchemy import or_
 
 router = APIRouter()
 
@@ -70,4 +71,58 @@ async def get_movie_detail(movie_id: int, db: Session = Depends(get_db)):
         
     except Exception as e:
         print(f"获取电影详情错误: {str(e)}")  # 添加错误日志
-        raise HTTPException(status_code=500, detail=f"获取电影详情失败: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"获取电影详情失败: {str(e)}")
+
+@router.get("/search", response_model=List[MovieSchema])
+async def search_movies(
+    keyword: str = Query(None, description="搜索关键词"),
+    db: Session = Depends(get_db)
+):
+    """根据关键词搜索电影"""
+    try:
+        if not keyword:
+            print("关键词为空")
+            return []
+            
+        # URL解码并处理关键词
+        keyword = keyword.strip()
+        print(f"搜索关键词: {keyword}")  # 添加日志
+            
+        # 将搜索关键词分词
+        keywords = list(keyword)  # 将字符串拆分成单个字符
+        print(f"分词结果: {keywords}")  # 添加日志
+            
+        # 构建查询条件
+        conditions = []
+        for kw in keywords:
+            conditions.append(
+                or_(
+                    Movie.title.like(f"%{kw}%"),
+                    Movie.director_description.like(f"%{kw}%"),
+                    Movie.leader.like(f"%{kw}%"),
+                    Movie.tags.like(f"%{kw}%"),
+                    Movie.country.like(f"%{kw}%")
+                )
+            )
+        
+        # 使用 or_ 连接所有条件
+        query = db.query(Movie).filter(or_(*conditions)).order_by(desc(Movie.rating))
+        
+        movies = query.all()
+        print(f"搜索到 {len(movies)} 条结果")  # 添加日志
+        
+        # 打印第一条结果用于调试
+        if movies:
+            print(f"第一条结果: {movies[0].title}")
+            
+        return movies
+    except Exception as e:
+        print(f"搜索电影失败: {str(e)}")
+        print(f"错误类型: {type(e)}")  # 添加错误类型信息
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "搜索电影失败",
+                "error": str(e)
+            }
+        ) 
