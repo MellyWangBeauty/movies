@@ -36,7 +36,7 @@ const router = createRouter({
       component: MovieDetail
     },
     {
-      path: '/user-center',
+      path: '/user',
       name: 'user-center',
       component: UserCenter,
       meta: { requiresAuth: true }

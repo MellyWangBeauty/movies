@@ -48,6 +48,11 @@ const handleSearch = async () => {
     return
   }
 
+  // 更新 URL，但不触发路由变化
+  router.replace({
+    query: { keyword: searchKeyword.value.trim() }
+  })
+
   loading.value = true
   error.value = null
   
@@ -58,16 +63,10 @@ const handleSearch = async () => {
     })
     console.log('搜索结果:', response.data)  // 调试日志
     movies.value = response.data
-    
-    // 更新 URL，但不触发路由变化
-    router.replace({
-      query: { keyword: searchKeyword.value.trim() }
-    })
   } catch (err) {
     console.error('搜索电影失败:', err)
-    error.value = err.response?.data?.message || '搜索失败，请重试'
-    ElMessage.error(error.value)
-    movies.value = []
+    error.value = '搜索失败，请重试'
+    ElMessage.error(err.response?.data?.message || '搜索失败，请重试')
   } finally {
     loading.value = false
   }
@@ -77,11 +76,9 @@ const handleSearch = async () => {
 watch(
   () => route.query.keyword,
   (newKeyword) => {
-    if (newKeyword) {
+    if (newKeyword && newKeyword !== searchKeyword.value) {
       searchKeyword.value = newKeyword
       handleSearch()
-    } else {
-      movies.value = []
     }
   }
 )

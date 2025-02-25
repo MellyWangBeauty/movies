@@ -11,29 +11,18 @@
     </div>
     <div class="header-right">
       <div>
-        <el-autocomplete
+        <el-input
           v-model="searchKeyword"
-          :fetch-suggestions="querySearchAsync"
           style="max-width: 600px"
-          placeholder="请输入电影名称、导演、演员或标签"
+          placeholder="请输入电影名称"
           class="input-with-select"
           clearable
-          @select="handleSelect"
           @keyup.enter="handleSearch"
         >
           <template #append>
             <el-button :icon="Search" @click="handleSearch" />
           </template>
-          <template #default="{ item }">
-            <div class="suggestion-item">
-              <div class="title">{{ item.title }}</div>
-              <div class="info">
-                <span v-if="item.director_description">导演：{{ item.director_description }}</span>
-                <span v-if="item.rating">评分：{{ item.rating }}</span>
-              </div>
-            </div>
-          </template>
-        </el-autocomplete>
+        </el-input>
       </div>
       <div class="avatar-container">
         <el-dropdown v-if="userStore.isLoggedIn()" trigger="hover">
@@ -293,36 +282,6 @@ const userStore = useUserStore()
 const searchKeyword = ref('')
 const loginDialogVisible = ref(false)
 const dialogMode = ref('login')
-
-const querySearchAsync = async (queryString, cb) => {
-  if (!queryString.trim()) {
-    cb([])
-    return
-  }
-
-  try {
-    console.log('发送搜索建议请求:', queryString.trim())  // 调试日志
-    const response = await axios.get('/api/movies/search', {
-      params: { keyword: queryString.trim() }
-    })
-    console.log('搜索建议结果:', response.data)  // 调试日志
-    
-    // 转换结果格式以适配 el-autocomplete
-    const suggestions = response.data.map(item => ({
-      value: item.title,
-      ...item
-    }))
-    cb(suggestions)
-  } catch (err) {
-    console.error('获取搜索建议失败:', err)
-    ElMessage.error('获取搜索建议失败，请重试')
-    cb([])
-  }
-}
-
-const handleSelect = (item) => {
-  router.push(`/movie/${item.id}`)
-}
 
 const handleSearch = () => {
   if (!searchKeyword.value.trim()) {
