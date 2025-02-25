@@ -31,7 +31,8 @@ defineProps({
 
 <style lang="scss" scoped>
 .movie-card {
-  width: 100%;
+  width: 180px;
+  height: 320px;
   transition: transform 0.3s;
   margin-bottom: 20px;
 
@@ -46,16 +47,23 @@ defineProps({
   a {
     text-decoration: none;
     display: block;
-    width: 100%;
+    height: 100%;
   }
 
   .movie-cover {
-    width: 100%;
-    aspect-ratio: 2/3;
+    width: 180px;
+    height: 270px;
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 8px;
     background-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+
+    .el-image {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
   }
 
   .image-error {
@@ -72,7 +80,8 @@ defineProps({
   .movie-title {
     font-size: 14px;
     color: #fff;
-    margin: 0 0 8px;
+    height: 32px;
+    line-height: 32px;
     text-align: center;
     transition: color 0.3s;
     overflow: hidden;
@@ -80,4 +89,5 @@ defineProps({
     white-space: nowrap;
     padding: 0 4px;
   }
-}</style> 
+}
+</style> 

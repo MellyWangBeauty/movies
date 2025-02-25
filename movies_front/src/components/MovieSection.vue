@@ -39,10 +39,11 @@ defineProps({
 
 <style lang="scss" scoped>
 .movie-section {
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 
   .section-header {
-    margin-bottom: 20px;
+
+    margin: 20px 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -74,23 +75,24 @@ defineProps({
 
   .movie-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(6, 180px);
+    gap: 24px;
+    justify-content: center;
 
-    @media (max-width: 1200px) {
-      grid-template-columns: repeat(5, 1fr);
+    @media (max-width: 1280px) {
+      grid-template-columns: repeat(5, 180px);
     }
 
-    @media (max-width: 992px) {
-      grid-template-columns: repeat(4, 1fr);
+    @media (max-width: 1080px) {
+      grid-template-columns: repeat(4, 180px);
     }
 
-    @media (max-width: 768px) {
-      grid-template-columns: repeat(3, 1fr);
+    @media (max-width: 880px) {
+      grid-template-columns: repeat(3, 180px);
     }
 
-    @media (max-width: 576px) {
-      grid-template-columns: repeat(2, 1fr);
+    @media (max-width: 680px) {
+      grid-template-columns: repeat(2, 180px);
     }
   }
 }

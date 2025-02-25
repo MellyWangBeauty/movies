@@ -43,8 +43,8 @@ const loading = ref(true)
 const error = ref(null)
 const paginationInfo = ref({
   start: 0,
-  end: 24,
-  pageSize: 24
+  end: 25,
+  pageSize: 25
 })
 
 const displayedMovies = computed(() => {

@@ -43,8 +43,8 @@ const loading = ref(true)
 const error = ref(null)
 const paginationInfo = ref({
   start: 0,
-  end: 24,
-  pageSize: 24
+  end: 25,
+  pageSize: 25
 })
 
 const displayedMovies = computed(() => {
@@ -83,14 +83,14 @@ onMounted(() => {
 <style lang="scss" scoped>
 .recommend-movies {
   width: 100%;
-  min-height: calc(100vh - 60px); // 减去头部导航的高度
+  min-height: calc(100vh - 60px);
   box-sizing: border-box;
+  padding: 0 40px;
 
   .content {
-    max-width: 1200px;
-    width: 100%;
+    width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 20px 0;
     box-sizing: border-box;
 
     .page-title {
@@ -108,25 +108,49 @@ onMounted(() => {
 
     .movie-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 16px;
-      margin: 0 auto;
+      grid-template-columns: repeat(6, 180px);
+      gap: 24px;
+      justify-content: center;
 
-      @media (max-width: 1200px) {
-        grid-template-columns: repeat(5, 1fr);
+      @media (max-width: 1280px) {
+        grid-template-columns: repeat(5, 180px);
       }
 
-      @media (max-width: 992px) {
-        grid-template-columns: repeat(4, 1fr);
+      @media (max-width: 1080px) {
+        grid-template-columns: repeat(4, 180px);
       }
 
-      @media (max-width: 768px) {
-        grid-template-columns: repeat(3, 1fr);
+      @media (max-width: 880px) {
+        grid-template-columns: repeat(3, 180px);
       }
 
-      @media (max-width: 576px) {
-        grid-template-columns: repeat(2, 1fr);
+      @media (max-width: 680px) {
+        grid-template-columns: repeat(2, 180px);
       }
+    }
+  }
+
+  @media (max-width: 1280px) {
+    .content {
+      width: 980px;
+    }
+  }
+
+  @media (max-width: 1080px) {
+    .content {
+      width: 780px;
+    }
+  }
+
+  @media (max-width: 880px) {
+    .content {
+      width: 580px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .content {
+      width: 380px;
     }
   }
 }

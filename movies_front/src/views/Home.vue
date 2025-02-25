@@ -48,9 +48,9 @@ const fetchMovies = async () => {
   
   try {
     const [hotResponse, rankResponse, recommendResponse] = await Promise.all([
-      axios.get('/api/movies/hot?limit=6'),
-      axios.get('/api/movies/rank?limit=6'),
-      axios.get('/api/movies/recommend?limit=6')
+      axios.get('/api/movies/hot?limit=5'),
+      axios.get('/api/movies/rank?limit=5'),
+      axios.get('/api/movies/recommend?limit=5')
     ])
 
     hotMovies.value = hotResponse.data || []

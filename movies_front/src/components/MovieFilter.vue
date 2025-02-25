@@ -54,7 +54,7 @@ const emit = defineEmits(['filter'])
 
 // 预设选项
 const tags = ['全部', '剧情', '喜剧', '动作', '爱情', '科幻', '动画', '悬疑', '惊悚', '恐怖', '纪录片']
-const years = ['全部', '2024', '2023', '2022', '2021', '2020', '2010年代', '2000年代', '90年代', '80年代', '更早']
+const years = ['全部', '2024', '2023', '2022', '2021', '2020', '2010年代', '2000年代', '更早']
 const countries = ['全部', '中国大陆', '中国香港', '中国台湾', '美国', '日本', '韩国', '英国', '法国', '其他']
 
 // 选中的值
@@ -110,7 +110,7 @@ const filterMovies = () => {
           const decade = parseInt(year.slice(0, 4))
           return movieYear >= decade && movieYear < decade + 10
         } else if (year === '更早') {
-          return movieYear < 1980
+          return movieYear < 2000
         } else {
           return movie.years === year
         }
