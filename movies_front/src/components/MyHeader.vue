@@ -65,6 +65,10 @@
           </template>
         </el-dropdown>
       </div>
+      <div class="user-name">
+        <span v-if="userStore.isLoggedIn()">{{ userStore.userInfo?.username }}</span>
+        <span v-else class="not-logged">未登录</span>
+      </div>
     </div>
 
     <!-- 登录注册弹框 -->
@@ -80,6 +84,7 @@
   align-items: center; // 垂直居中对齐
   padding: 10px 100px; // 添加内边距
   color: #fff;
+  background-color: #000;
 
   .header-left {
     display: flex;
@@ -171,6 +176,16 @@
             border-color: rgba(255, 255, 255, 0.5);
           }
         }
+      }
+    }
+
+    .user-name {
+      font-size: 14px;
+      color: #fff;
+      margin-left: -30px;
+
+      .not-logged {
+        color: rgba(255, 255, 255, 0.7);
       }
     }
   }

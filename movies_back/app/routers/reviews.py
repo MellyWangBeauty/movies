@@ -56,42 +56,28 @@ async def create_review(
         "username": current_user.username
     }
 
-@router.get("/{movie_id}", response_model=ReviewList)
-async def get_movie_reviews(
+@router.get("/{movie_id}", response_model=ReviewResponse)
+async def get_user_review(
     movie_id: int,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # 检查电影是否存在
-    movie = db.query(Movie).filter(Movie.id == movie_id).first()
-    if not movie:
-        raise HTTPException(status_code=404, detail="电影不存在")
-    
-    # 获取评论总数
-    total = db.query(MovieReview).filter(
+    # 检查用户是否已登录
+    if not current_user:
+        return None  # 未登录返回空
+
+    # 获取当前用户对该电影的评价
+    review = db.query(MovieReview).filter(
+        MovieReview.user_id == current_user.id,
         MovieReview.movie_id == movie_id
-    ).count()
+    ).first()
     
-    # 获取评论列表
-    reviews = db.query(MovieReview, User.username)\
-        .join(User, MovieReview.user_id == User.id)\
-        .filter(MovieReview.movie_id == movie_id)\
-        .order_by(desc(MovieReview.created_at))\
-        .offset(skip)\
-        .limit(limit)\
-        .all()
-    
-    results = [
-        {
-            **review.__dict__,
-            "username": username
-        } for review, username in reviews
-    ]
+    if not review:
+        return None  # 未找到评价返回空
     
     return {
-        "results": results,
-        "total": total
+        **review.__dict__,
+        "username": current_user.username
     }
 
 @router.delete("/{movie_id}", status_code=204)

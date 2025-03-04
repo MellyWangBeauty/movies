@@ -128,20 +128,7 @@ const hasComments = computed(() => {
 const userRating = ref(0)
 const userReview = ref('')
 const submitting = ref(false)
-const reviews = ref([])
-const totalReviews = ref(0)
 const userStore = useUserStore()
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
 
 const handleRatingChange = (value) => {
   if (!userStore.isLoggedIn()) {
@@ -183,7 +170,7 @@ const submitReview = async () => {
     ElMessage.success('评价发布成功')
     userRating.value = 0
     userReview.value = ''
-    await fetchReviews()
+    await fetchReview()
   } catch (error) {
     console.error('提交评价失败:', error)
     if (error.response?.status === 401) {
@@ -200,7 +187,7 @@ const submitReview = async () => {
   }
 }
 
-const fetchReviews = async () => {
+const fetchReview = async () => {
   try {
     const token = userStore.token
     const response = await axios.get(`/api/reviews/${route.params.id}`, {
@@ -208,13 +195,25 @@ const fetchReviews = async () => {
         'Authorization': `Bearer ${token}`
       }
     })
-    reviews.value = response.data.results
-    totalReviews.value = response.data.total
+    // 检查是否有评论数据
+    if (response.data) {
+      // 只设置一次评分和评论
+      userRating.value = response.data.rating
+      userReview.value = response.data.content
+    } else {
+      // 如果没有评论数据，重置为初始状态
+      userRating.value = 0
+      userReview.value = ''
+      reviews.value = null
+      totalReviews.value = 0
+    }
   } catch (error) {
     console.error('获取评论列表失败:', error)
     if (error.response?.status === 401) {
-      // 如果是未登录状态，可以静默失败，因为未登录用户也可以查看评论
       console.log('用户未登录')
+      // 重置表单
+      userRating.value = 0
+      userReview.value = ''
     }
   }
 }
@@ -230,7 +229,7 @@ const fetchMovieDetail = async () => {
 
 onMounted(() => {
   fetchMovieDetail()
-  fetchReviews()
+  fetchReview()
 })
 </script>
 
