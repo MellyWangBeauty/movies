@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <!-- 在短评区域后添加用户评分和影评部分 -->
+    <!-- 用户评分 -->
     <div class="user-review-section">
       <h2>我的评价</h2>
       
@@ -169,7 +169,7 @@ const submitReview = async () => {
 
   try {
     submitting.value = true
-    const response = await axios.post(`/api/movies/${route.params.id}/reviews`, {
+    const response = await axios.post(`/api/reviews/${route.params.id}`, {
       rating: userRating.value,
       content: userReview.value
     })
@@ -190,7 +190,7 @@ const submitReview = async () => {
 
 const fetchReviews = async () => {
   try {
-    const response = await axios.get(`/api/movies/${route.params.id}/reviews`)
+    const response = await axios.get(`/api/reviews/${route.params.id}`)
     reviews.value = response.data.results
     totalReviews.value = response.data.total
   } catch (error) {

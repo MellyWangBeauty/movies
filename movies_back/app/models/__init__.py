@@ -3,4 +3,5 @@
 """ 
 
 from .user import User
-from .movie import Movie 
+from .movie import Movie
+from .review import MovieReview 

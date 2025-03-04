@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import users, movies
+from .routers import users, movies, reviews
 from .database import engine
-from .models import user, movie
+from .models import user, movie, review
 
-# 创建数据库表
-user.Base.metadata.create_all(bind=engine)
-movie.Base.metadata.create_all(bind=engine)
+# 创建数据库表 - 添加 checkfirst=True 参数
+user.Base.metadata.create_all(bind=engine, checkfirst=True)
+movie.Base.metadata.create_all(bind=engine, checkfirst=True)
+review.MovieReview.__table__.create(bind=engine, checkfirst=True)
 
 app = FastAPI(
     title="电影数据可视化分析平台",
@@ -31,4 +32,5 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(users.router, prefix="/api/users", tags=["users"])
-app.include_router(movies.router, prefix="/api/movies", tags=["movies"]) 
+app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
+app.include_router(reviews.router, prefix="/api/reviews", tags=["reviews"]) 
