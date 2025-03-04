@@ -40,6 +40,47 @@
         </div>
       </div>
     </div>
+
+    <!-- 在短评区域后添加用户评分和影评部分 -->
+    <div class="user-review-section">
+      <h2>我的评价</h2>
+      
+      <!-- 评分组件 -->
+      <div class="rating-box">
+        <span class="rating-label">评分：</span>
+        <el-rate
+          v-model="userRating"
+          :colors="['#ffd04b', '#ffd04b', '#ffd04b']"
+          :show-score="true"
+          score-template="{value}分"
+          @change="handleRatingChange"
+        />
+      </div>
+
+      <!-- 影评输入框 -->
+      <div class="review-box">
+        <span class="review-label">影评：</span>
+        <el-input
+          v-model="userReview"
+          type="textarea"
+          :rows="4"
+          placeholder="写下你的观后感..."
+          :maxlength="500"
+          show-word-limit
+        />
+      </div>
+
+      <!-- 提交按钮 -->
+      <div class="submit-box">
+        <el-button 
+          type="primary" 
+          :loading="submitting"
+          @click="submitReview"
+        >
+          发布评价
+        </el-button>
+      </div>
+    </div>
   </div>
   <div v-else class="loading">
     <el-skeleton :rows="10" animated />
@@ -49,7 +90,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '../stores/user'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const movie = ref(null)
@@ -81,6 +124,80 @@ const hasComments = computed(() => {
   return movieComments.value.length > 0
 })
 
+// 新增评分和评论相关的响应式变量
+const userRating = ref(0)
+const userReview = ref('')
+const submitting = ref(false)
+const reviews = ref([])
+const totalReviews = ref(0)
+const userStore = useUserStore()
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const handleRatingChange = (value) => {
+  if (!userStore.isLoggedIn()) {
+    ElMessage.warning('请先登录后再评分')
+    userRating.value = 0
+    return
+  }
+}
+
+const submitReview = async () => {
+  if (!userStore.isLoggedIn()) {
+    ElMessage.warning('请先登录后再发表评价')
+    return
+  }
+
+  if (userRating.value === 0) {
+    ElMessage.warning('请先给出评分')
+    return
+  }
+
+  if (!userReview.value.trim()) {
+    ElMessage.warning('请输入影评内容')
+    return
+  }
+
+  try {
+    submitting.value = true
+    const response = await axios.post(`/api/movies/${route.params.id}/reviews`, {
+      rating: userRating.value,
+      content: userReview.value
+    })
+
+    ElMessage.success('评价发布成功')
+    userRating.value = 0
+    userReview.value = ''
+    
+    // 重新加载评论列表
+    await fetchReviews()
+  } catch (error) {
+    console.error('提交评价失败:', error)
+    ElMessage.error('评价发布失败，请重试')
+  } finally {
+    submitting.value = false
+  }
+}
+
+const fetchReviews = async () => {
+  try {
+    const response = await axios.get(`/api/movies/${route.params.id}/reviews`)
+    reviews.value = response.data.results
+    totalReviews.value = response.data.total
+  } catch (error) {
+    console.error('获取评论列表失败:', error)
+  }
+}
+
 const fetchMovieDetail = async () => {
   try {
     const response = await axios.get(`/api/movies/${route.params.id}`)
@@ -92,6 +209,7 @@ const fetchMovieDetail = async () => {
 
 onMounted(() => {
   fetchMovieDetail()
+  fetchReviews()
 })
 </script>
 
@@ -99,7 +217,7 @@ onMounted(() => {
 .movie-detail {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 100px;
   color: #fff;
 }
 
@@ -247,5 +365,101 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px;
+}
+
+.user-review-section {
+  margin-top: 40px;
+  
+  h2 {
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  .rating-box {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    
+    .rating-label {
+      color: #fff;
+      margin-right: 10px;
+    }
+  }
+
+  .review-box {
+    margin-bottom: 20px;
+    
+    .review-label {
+      display: block;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+  }
+
+  .submit-box {
+    text-align: right;
+    margin-bottom: 30px;
+  }
+
+  .all-reviews {
+    .reviews-list {
+      .review-item {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+
+        .review-header {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 15px;
+
+          .review-info {
+            margin-left: 12px;
+            flex: 1;
+
+            .reviewer-name {
+              color: #fff;
+              font-size: 16px;
+              display: block;
+              margin-bottom: 4px;
+            }
+
+            .review-meta {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+
+              .review-date {
+                color: #909399;
+                font-size: 14px;
+              }
+            }
+          }
+        }
+
+        .review-content {
+          color: #fff;
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+}
+
+:deep(.el-textarea__inner) {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+
+  &:focus {
+    border-color: var(--el-color-primary);
+  }
+}
+
+:deep(.el-divider) {
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 30px 0;
 }
 </style> 
