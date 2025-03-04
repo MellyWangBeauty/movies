@@ -21,6 +21,20 @@ export const useUserStore = defineStore('user', () => {
     delete axios.defaults.headers.common['Authorization']
   }
 
+  // 初始化store
+  const initializeStore = async () => {
+    const savedToken = localStorage.getItem('token')
+    if (savedToken) {
+      setToken(savedToken)
+      try {
+        await fetchUserInfo()
+      } catch (error) {
+        clearToken()
+        userInfo.value = null
+      }
+    }
+  }
+
   // 注册
   const register = async (userData) => {
     try {
@@ -87,6 +101,9 @@ export const useUserStore = defineStore('user', () => {
   const isLoggedIn = () => {
     return !!token.value
   }
+
+  // 初始化store
+  initializeStore()
 
   return {
     token,

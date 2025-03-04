@@ -190,6 +190,8 @@ const handleSubmit = async () => {
       await userStore.login(loginForm)
       ElMessage.success('登录成功')
       dialogVisible.value = false
+      // 登录成功后刷新页面
+      window.location.reload()
     } else {
       // 注册逻辑
       await registerFormRef.value.validate()

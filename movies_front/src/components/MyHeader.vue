@@ -322,9 +322,15 @@ const handleRegister = () => {
   loginDialogVisible.value = true
 }
 
-const handleLogout = () => {
-  userStore.logout()
-  ElMessage.success('退出登录成功')
+const handleLogout = async () => {
+  try {
+    await userStore.logout()
+    ElMessage.success('退出登录成功')
+    // 刷新当前页面
+    window.location.reload()
+  } catch (error) {
+    ElMessage.error('退出登录失败')
+  }
 }
 
 const goToUserCenter = () => {
