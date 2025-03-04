@@ -169,20 +169,32 @@ const submitReview = async () => {
 
   try {
     submitting.value = true
+    // 直接从 userStore.token 获取 token
+    const token = userStore.token
     const response = await axios.post(`/api/reviews/${route.params.id}`, {
       rating: userRating.value,
       content: userReview.value
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`  // 添加token到请求头
+      }
     })
 
     ElMessage.success('评价发布成功')
     userRating.value = 0
     userReview.value = ''
-    
-    // 重新加载评论列表
     await fetchReviews()
   } catch (error) {
     console.error('提交评价失败:', error)
-    ElMessage.error('评价发布失败，请重试')
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录后再评价')
+      // 可以在这里添加跳转到登录页面的逻辑
+      // router.push('/login')
+    } else if (error.response?.data?.detail) {
+      ElMessage.error(error.response.data.detail)
+    } else {
+      ElMessage.error('评价发布失败，请重试')
+    }
   } finally {
     submitting.value = false
   }
@@ -190,11 +202,20 @@ const submitReview = async () => {
 
 const fetchReviews = async () => {
   try {
-    const response = await axios.get(`/api/reviews/${route.params.id}`)
+    const token = userStore.token
+    const response = await axios.get(`/api/reviews/${route.params.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     reviews.value = response.data.results
     totalReviews.value = response.data.total
   } catch (error) {
     console.error('获取评论列表失败:', error)
+    if (error.response?.status === 401) {
+      // 如果是未登录状态，可以静默失败，因为未登录用户也可以查看评论
+      console.log('用户未登录')
+    }
   }
 }
 

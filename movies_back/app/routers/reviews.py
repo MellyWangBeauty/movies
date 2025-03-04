@@ -11,15 +11,17 @@ from sqlalchemy import desc
 
 router = APIRouter()
 
-@router.post("/{movie_id}/reviews", response_model=ReviewResponse)
+@router.post("/{movie_id}", response_model=ReviewResponse)
 async def create_review(
     movie_id: int,
     review: ReviewCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    print(f"Received review request for movie {movie_id}")  # 添加调试日志
-    print(f"Review data: {review}")  # 添加调试日志
+    # 检查电影是否存在
+    movie = db.query(Movie).filter(Movie.id == movie_id).first()
+    if not movie:
+        raise HTTPException(status_code=404, detail="电影不存在")
     
     # 检查用户是否已经评价过这部电影
     existing_review = db.query(MovieReview).filter(
@@ -28,8 +30,17 @@ async def create_review(
     ).first()
     
     if existing_review:
-        raise HTTPException(status_code=400, detail="您已经评价过这部电影")
+        # 更新已有评价
+        existing_review.rating = review.rating
+        existing_review.content = review.content
+        db.commit()
+        db.refresh(existing_review)
+        return {
+            **existing_review.__dict__,
+            "username": current_user.username
+        }
     
+    # 创建新评价
     db_review = MovieReview(
         user_id=current_user.id,
         movie_id=movie_id,
@@ -45,13 +56,18 @@ async def create_review(
         "username": current_user.username
     }
 
-@router.get("/{movie_id}/reviews", response_model=ReviewList)
+@router.get("/{movie_id}", response_model=ReviewList)
 async def get_movie_reviews(
     movie_id: int,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
+    # 检查电影是否存在
+    movie = db.query(Movie).filter(Movie.id == movie_id).first()
+    if not movie:
+        raise HTTPException(status_code=404, detail="电影不存在")
+    
     # 获取评论总数
     total = db.query(MovieReview).filter(
         MovieReview.movie_id == movie_id
@@ -77,6 +93,23 @@ async def get_movie_reviews(
         "results": results,
         "total": total
     }
+
+@router.delete("/{movie_id}", status_code=204)
+async def delete_review(
+    movie_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    review = db.query(MovieReview).filter(
+        MovieReview.user_id == current_user.id,
+        MovieReview.movie_id == movie_id
+    ).first()
+    
+    if not review:
+        raise HTTPException(status_code=404, detail="评价不存在")
+    
+    db.delete(review)
+    db.commit()
 
 @router.post("/movies/{movie_id}/rate")
 async def rate_movie(
