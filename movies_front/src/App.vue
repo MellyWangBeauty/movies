@@ -1,7 +1,9 @@
 <template>
   <div>
     <MyHeader></MyHeader>
-    <router-view />
+    <keep-alive>
+      <router-view />
+    </keep-alive>
   </div>
 </template>
 <script>

@@ -143,7 +143,7 @@ async def get_user_reviews(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    reviews = db.query(MovieReview, Movie.title)\
+    reviews = db.query(MovieReview, Movie)\
         .join(Movie, MovieReview.movie_id == Movie.id)\
         .filter(MovieReview.user_id == current_user.id)\
         .order_by(desc(MovieReview.created_at))\
@@ -152,10 +152,14 @@ async def get_user_reviews(
     return [
         {
             "id": review.id,
-            "movie_title": title,
+            "movie_id": review.movie_id,
+            "movie_title": movie.title,
             "rating": review.rating,
             "content": review.content,
-            "created_at": review.created_at
+            "created_at": review.created_at,
+            "tags": movie.tags,
+            "year": movie.years,
+            "country": movie.country
         }
-        for review, title in reviews
+        for review, movie in reviews
     ] 
