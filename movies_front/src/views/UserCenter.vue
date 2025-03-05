@@ -1,124 +1,20 @@
 <template>
   <div class="user-center">
-    <!-- <el-card class="user-info">
-      <template #header>
-        <div class="card-header">
-          <span>个人信息</span>
-          <el-button type="primary" @click="handleEdit">编辑</el-button>
-        </div>
-      </template>
-      <div class="avatar-container">
-        <el-avatar
-          :size="100"
-          :src="userStore.userInfo?.avatar"
-          :icon="UserFilled"
-        />
-        <el-upload
-          v-if="isEditing"
-          class="avatar-uploader"
-          action="/api/upload"
-          :show-file-list="false"
-          :on-success="handleAvatarSuccess"
-        >
-          <el-button size="small">更换头像</el-button>
-        </el-upload>
-      </div>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :disabled="!isEditing"
-        label-width="100px"
-      >
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" />
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="form.email" />
-        </el-form-item>
-        <el-form-item label="个人简介">
-          <el-input
-            v-model="form.bio"
-            type="textarea"
-            :rows="4"
-            placeholder="写点什么吧..."
-          />
-        </el-form-item>
-        <el-form-item v-if="isEditing">
-          <el-button type="primary" @click="handleSave">保存</el-button>
-          <el-button @click="cancelEdit">取消</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card> -->
-
-    <!-- <el-card class="user-stats">
-      <template #header>
-        <div class="card-header">
-          <span>我的数据</span>
-        </div>
-      </template>
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <div class="stat-item">
-            <h3>收藏电影</h3>
-            <p>{{ userStats.favorites || 0 }}</p>
-          </div>
-        </el-col>
-        <el-col :span="8">
-          <div class="stat-item">
-            <h3>评论数</h3>
-            <p>{{ userStats.comments || 0 }}</p>
-          </div>
-        </el-col>
-        <el-col :span="8">
-          <div class="stat-item">
-            <h3>评分数</h3>
-            <p>{{ userStats.ratings || 0 }}</p>
-          </div>
-        </el-col>
-      </el-row>
-    </el-card> -->
-
+    <h1 style="text-align: center; color: #fff; padding-top: 20px;">观影分析报告</h1>
     <div class="charts-container">
       <!-- 电影标签分布 -->
-      <el-card class="chart-card">
-        <template #header>
-          <div class="card-header">
-            <span>观影标签分布</span>
-          </div>
-        </template>
-        <div ref="tagsPieChart" class="chart"></div>
-      </el-card>
+      <div ref="tagsPieChart" class="chart"></div>
 
       <!-- 电影年份分布 -->
-      <el-card class="chart-card">
-        <template #header>
-          <div class="card-header">
-            <span>观影年份分布</span>
-          </div>
-        </template>
-        <div ref="yearsBarChart" class="chart"></div>
-      </el-card>
+      <div ref="yearsBarChart" class="chart"></div>
 
       <!-- 电影地区分布 -->
-      <el-card class="chart-card">
-        <template #header>
-          <div class="card-header">
-            <span>观影地区分布</span>
-          </div>
-        </template>
-        <div ref="countryBarChart" class="chart"></div>
-      </el-card>
+      <div ref="countryBarChart" class="chart"></div>
     </div>
-
-    <!-- 用户评分电影列表 -->
+    
     <el-card class="movie-reviews">
-      <template #header>
-        <div class="card-header">
-          <span>我的影评</span>
-        </div>
-      </template>
       <el-table :data="userReviews" style="width: 100%">
-        <el-table-column prop="movie_title" label="电影" width="200">
+        <el-table-column prop="movie_title" label="我的影评" width="200">
           <template #default="scope">
             <router-link 
               :to="'/movie/' + scope.row.movie_id" 
@@ -128,7 +24,7 @@
             </router-link>
           </template>
         </el-table-column>
-        <el-table-column prop="rating" label="评分" width="120">
+        <el-table-column prop="rating" label="评分" width="200">
           <template #default="scope">
             <el-rate
               v-model="scope.row.rating"
@@ -146,23 +42,17 @@
         </el-table-column>
       </el-table>
     </el-card>
-
-    <!-- 数据分析图表 -->
-    
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { UserFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 import * as echarts from 'echarts'
 import axios from 'axios'
 
 const userStore = useUserStore()
-const isEditing = ref(false)
-const formRef = ref(null)
 const userReviews = ref([])
 
 // ECharts 实例引用
@@ -176,12 +66,6 @@ const form = reactive({
   bio: ''
 })
 
-const userStats = reactive({
-  favorites: 0,
-  comments: 0,
-  ratings: 0
-})
-
 // 初始化表单数据
 const initForm = () => {
   const userInfo = userStore.userInfo
@@ -190,33 +74,6 @@ const initForm = () => {
     form.email = userInfo.email
     form.bio = userInfo.bio || ''
   }
-}
-
-// 编辑个人信息
-const handleEdit = () => {
-  isEditing.value = true
-}
-
-// 取消编辑
-const cancelEdit = () => {
-  isEditing.value = false
-  initForm()
-}
-
-// 保存个人信息
-const handleSave = async () => {
-  try {
-    await userStore.updateUserInfo(form)
-    isEditing.value = false
-    ElMessage.success('保存成功')
-  } catch (error) {
-    ElMessage.error(error.message || '保存失败')
-  }
-}
-
-// 上传头像成功
-const handleAvatarSuccess = (response) => {
-  userStore.updateUserInfo({ avatar: response.url })
 }
 
 // 格式化日期
@@ -246,6 +103,28 @@ const fetchUserReviews = async () => {
 
 // 初始化图表
 const initCharts = (reviews) => {
+  // 设置图表主题色
+  const chartTheme = {
+    backgroundColor: 'transparent',
+    textStyle: {
+      color: 'rgba(255, 255, 255, 0.85)'
+    },
+    title: {
+      textStyle: {
+        color: 'rgba(255, 255, 255, 0.85)',
+        fontSize: 16,
+        fontWeight: 'normal'
+      }
+    },
+    tooltip: {
+      backgroundColor: 'rgba(50, 50, 50, 0.9)',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      textStyle: {
+        color: '#fff'
+      }
+    }
+  }
+
   // 处理数据
   const tagsData = processTagsData(reviews)
   const yearsData = processYearsData(reviews)
@@ -254,9 +133,14 @@ const initCharts = (reviews) => {
   // 初始化饼图
   const pieChart = echarts.init(tagsPieChart.value)
   pieChart.setOption({
+    ...chartTheme,
     title: {
-      text: '电影标签分布',
-      left: 'center'
+      text: '标签分布',
+      left: 'center',
+      top: 0,
+      textStyle: {
+        color: '#fff' // 修改为你想要的颜色
+      }
     },
     tooltip: {
       trigger: 'item',
@@ -264,8 +148,17 @@ const initCharts = (reviews) => {
     },
     series: [{
       type: 'pie',
-      radius: '65%',
+      radius: ['30%', '70%'],
+      center: ['50%', '55%'],
       data: tagsData,
+      roseType: 'radius',
+      label: {
+        color: 'rgba(255, 255, 255, 0.85)'
+      },
+      itemStyle: {
+        borderColor: 'rgba(17, 19, 25, 1)',
+        borderWidth: 2
+      },
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
@@ -279,46 +172,90 @@ const initCharts = (reviews) => {
   // 初始化年份柱状图
   const yearsChart = echarts.init(yearsBarChart.value)
   yearsChart.setOption({
+    ...chartTheme,
     title: {
       text: '年份分布',
-      left: 'center'
+      left: 'center',
+      textStyle: {
+        color: '#fff'
+      }
     },
     tooltip: {
       trigger: 'axis'
     },
-    xAxis: {
-      type: 'category',
-      data: yearsData.map(item => item.name)
-    },
     yAxis: {
-      type: 'value'
+      type: 'category',
+      data: yearsData.map(item => item.name),
+      axisLabel: {
+        color: '#fff'
+      }
+    },
+    xAxis: {
+      type: 'value',
+      show: false  // 隐藏y轴
     },
     series: [{
-      data: yearsData.map(item => item.value),
-      type: 'bar'
+      data: yearsData.map(item => ({
+        value: item.value,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#409eff' },
+            { offset: 1, color: '#36cfc9' }
+          ])
+        }
+      })),
+      type: 'bar',
+      barWidth: '60%',
+      label: {
+        show: true,
+        position: 'right',
+        color: '#fff'
+      }
     }]
   })
 
-  // 初始化地区横向柱状图
+  // 初始化地区柱状图
   const countryChart = echarts.init(countryBarChart.value)
   countryChart.setOption({
+    ...chartTheme,
     title: {
       text: '地区分布',
-      left: 'center'
+      left: 'center',
+      textStyle: {
+        color: '#fff'
+      }
     },
     tooltip: {
       trigger: 'axis'
     },
     yAxis: {
-      type: 'value'
+      type: 'value',
+      show: false  // 隐藏x轴
     },
     xAxis: {
       type: 'category',
-      data: countryData.map(item => item.name)
+      data: countryData.map(item => item.name),
+      axisLabel: {
+        color: '#fff'
+      }
     },
     series: [{
-      data: countryData.map(item => item.value),
-      type: 'bar'
+      data: countryData.map(item => ({
+        value: item.value,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+            { offset: 0, color: '#409eff' },
+            { offset: 1, color: '#36cfc9' }
+          ])
+        }
+      })),
+      type: 'bar',
+      barWidth: '60%',
+      label: {
+        show: true,
+        position: 'top',
+        color: '#fff'
+      }
     }]
   })
 
@@ -375,12 +312,31 @@ onMounted(() => {
 <style lang="scss" scoped>
 .user-center {
   max-width: 1200px;
-  margin: 20px auto;
   padding: 0 20px;
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.user-info {
-  margin-bottom: 20px;
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  padding: 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.chart {
+  height: 350px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .movie-reviews {
@@ -391,28 +347,6 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.avatar-container {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.avatar-uploader {
-  margin-top: 10px;
-}
-
-.charts-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.chart-card {
-  .chart {
-    height: 300px;
-  }
 }
 
 .movie-link {
@@ -443,4 +377,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>
