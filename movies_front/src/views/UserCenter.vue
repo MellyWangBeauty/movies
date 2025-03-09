@@ -150,9 +150,10 @@ const initCharts = (reviews) => {
     title: {
       text: "标签分布",
       left: "center",
-      top: 0,
+      top: 5,
       textStyle: {
-        color: "#fff", // 修改为你想要的颜色
+        color: "#fff",
+        fontSize: 14
       },
     },
     tooltip: {
@@ -162,11 +163,13 @@ const initCharts = (reviews) => {
     series: [
       {
         type: "pie",
-        radius: ["30%", "70%"],
+        radius: ["20%", "55%"],
         center: ["50%", "55%"],
         data: tagsData,
         label: {
           color: "rgba(255, 255, 255, 0.85)",
+          formatter: "{b}\n{c}部",
+          fontSize: 12
         },
         itemStyle: {
           borderColor: "rgba(17, 19, 25, 1)",
@@ -190,28 +193,40 @@ const initCharts = (reviews) => {
     title: {
       text: "年份分布",
       left: "center",
+      top: 5,
       textStyle: {
         color: "#fff",
+        fontSize: 14
       },
+    },
+    grid: {
+      top: 40,
+      bottom: 20,
+      left: '15%',
+      right: '15%',
+      containLabel: true
     },
     tooltip: {
       trigger: "axis",
     },
     yAxis: {
       type: "category",
-      data: yearsData.map((item) => item.name.toString().split('').join('\n')),
+      data: yearsData.map((item) => item.name),
       axisLabel: {
         color: "#fff",
-        lineHeight: 18,
-        padding: [0, 0, 0, 0],
-        formatter: function(value) {
-          return value.split('\n').join('\n');
-        }
+        fontSize: 12,
+        margin: 16,
+        width: 30,
+        overflow: 'break',
+        interval: 0
       },
+      axisTick: {
+        alignWithLabel: true
+      }
     },
     xAxis: {
       type: "value",
-      show: false, // 隐藏y轴
+      show: false,
     },
     series: [
       {
@@ -225,11 +240,13 @@ const initCharts = (reviews) => {
           },
         })),
         type: "bar",
-        barWidth: "60%",
+        barWidth: "50%",
         label: {
           show: true,
           position: "right",
           color: "#fff",
+          formatter: "{c}部",
+          fontSize: 12
         },
       },
     ],
@@ -242,41 +259,60 @@ const initCharts = (reviews) => {
     title: {
       text: "地区分布",
       left: "center",
+      top: 5,
       textStyle: {
         color: "#fff",
+        fontSize: 14
       },
+    },
+    grid: {
+      top: 50,
+      bottom: 30,
+      left: '15%',
+      right: '15%',
+      containLabel: true
     },
     tooltip: {
       trigger: "axis",
     },
     yAxis: {
       type: "value",
-      show: false, // 隐藏x轴
+      show: false,
     },
     xAxis: {
       type: "category",
       data: countryData.map((item) => item.name),
       axisLabel: {
         color: "#fff",
+        interval: 0,
+        rotate: 0,
+        fontSize: 12,
+        margin: 15
       },
+      axisTick: {
+        alignWithLabel: true
+      }
     },
     series: [
       {
         data: countryData.map((item) => ({
           value: item.value,
           itemStyle: {
-            color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-              { offset: 0, color: "#409eff" },
-              { offset: 1, color: "#36cfc9" },
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "#FF6B6B" },
+              { offset: 1, color: "#FFE66D" }
             ]),
           },
         })),
         type: "bar",
-        barWidth: "60%",
+        barWidth: "40%",
         label: {
           show: true,
           position: "top",
           color: "#fff",
+          formatter: "{c}部",
+          fontSize: 12,
+          distance: 10
         },
       },
     ],
@@ -362,15 +398,16 @@ onMounted(() => {
 
   .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
     padding: 20px;
     border-radius: 16px;
     backdrop-filter: blur(10px);
+    margin-bottom: 30px;
 
     .chart {
-      height: 350px;
-      padding: 20px;
+      height: 260px;
+      padding: 10px;
       background: rgba(255, 255, 255, 0.03);
       border-radius: 12px;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
