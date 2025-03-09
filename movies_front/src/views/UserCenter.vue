@@ -422,19 +422,19 @@ onMounted(() => {
   .reviews-table {
     width: 96%;
     margin: 0 auto;
+    border-collapse: collapse; /* 合并边框 */
+    border-radius: 12px; /* 圆角 */
+    max-width: 1200px; /* 设置最大宽度 */
     border-collapse: collapse;
     border-radius: 12px;
     max-width: 1200px;
-    user-select: none;
-    cursor: default;
 
     .movie-link {
-      color: #409eff;
-      text-decoration: none;
-      cursor: pointer;
+      color: #409eff; /* 设置链接颜色为浅蓝 */
+      text-decoration: none; /* 去掉下划线 */
 
       &:hover {
-        text-decoration: underline;
+        text-decoration: underline; /* 悬停时添加下划线 */
       }
     }
 
@@ -463,8 +463,8 @@ onMounted(() => {
         }
 
         .delete-btn {
-          cursor: pointer;
           color: #f56c6c;
+          cursor: pointer;
           transition: all 0.3s;
           
           &:hover {

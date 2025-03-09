@@ -189,32 +189,32 @@ const submitReview = async () => {
 
 const fetchReview = async () => {
   try {
+    // 如果未登录，直接返回
+    if (!userStore.isLoggedIn()) {
+      return;
+    }
+    
     const token = userStore.token
     const response = await axios.get(`/api/reviews/${route.params.id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      // 添加静默处理选项
+      silentError: true
     })
     // 检查是否有评论数据
     if (response.data) {
-      // 只设置一次评分和评论
       userRating.value = response.data.rating
       userReview.value = response.data.content
     } else {
       // 如果没有评论数据，重置为初始状态
       userRating.value = 0
       userReview.value = ''
-      reviews.value = null
-      totalReviews.value = 0
     }
   } catch (error) {
-    console.error('获取评论列表失败:', error)
-    if (error.response?.status === 401) {
-      console.log('用户未登录')
-      // 重置表单
-      userRating.value = 0
-      userReview.value = ''
-    }
+    // 静默处理所有错误，只重置表单
+    userRating.value = 0
+    userReview.value = ''
   }
 }
 
