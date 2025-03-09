@@ -21,6 +21,7 @@
             <th>评分</th>
             <th>评价</th>
             <th>评价时间</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -40,6 +41,15 @@
             </td>
             <td>{{ review.content }}</td>
             <td>{{ formatDate(review.created_at) }}</td>
+            <td>
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                @click="handleDeleteReview(review.movie_id)"
+              />
+            </td>
           </tr>
         </tbody>
       </table>
@@ -49,10 +59,11 @@
 
 <script setup>
 import { ref, reactive, onMounted, nextTick } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useUserStore } from "../stores/user";
 import * as echarts from "echarts";
 import axios from "axios";
+import { Delete } from '@element-plus/icons-vue'
 
 const userStore = useUserStore();
 const userReviews = ref([]);
@@ -315,6 +326,27 @@ const processCountryData = (reviews) => {
     .sort((a, b) => b.value - a.value);
 };
 
+// 删除评论
+const handleDeleteReview = async (movieId) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条评价吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    await axios.delete(`/api/reviews/${movieId}`)
+    ElMessage.success('删除成功')
+    // 重新获取评论列表
+    await fetchUserReviews()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除评论失败:', error)
+      ElMessage.error('删除失败，请重试')
+    }
+  }
+}
+
 onMounted(() => {
   initForm();
   fetchUserReviews();
@@ -356,6 +388,9 @@ onMounted(() => {
     border-collapse: collapse; /* 合并边框 */
     border-radius: 12px; /* 圆角 */
     max-width: 1200px; /* 设置最大宽度 */
+    border-collapse: collapse;
+    border-radius: 12px;
+    max-width: 1200px;
 
     .movie-link {
       color: #409eff; /* 设置链接颜色为浅蓝 */
@@ -367,27 +402,37 @@ onMounted(() => {
     }
 
     thead {
-      background-color: rgba(255, 255, 255, 0.03); /* 表头背景色 */
-      color: #fff; /* 表头文字颜色 */
+      background-color: rgba(255, 255, 255, 0.03);
+      color: #fff;
 
       th {
-        padding: 10px; /* 表头内边距 */
-        border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* 表头底部边框 */
-        text-align: left; /* 表头居左对齐 */
+        padding: 10px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        text-align: left;
       }
     }
 
     tbody {
       tr {
-        background-color: rgba(255, 255, 255, 0.03); /* 行背景色 */
-        color: #fff; /* 行文字颜色 */
+        background-color: rgba(255, 255, 255, 0.03);
+        color: #fff;
 
         &:hover {
-          background-color: rgba(70, 70, 70, 0.7); /* 悬停行背景色 */
+          background-color: rgba(70, 70, 70, 0.7);
         }
 
         td {
-          padding: 10px; /* 单元格内边距 */
+          padding: 10px;
+        }
+
+        .delete-btn {
+          color: #f56c6c;
+          cursor: pointer;
+          transition: all 0.3s;
+          
+          &:hover {
+            transform: scale(1.1);
+          }
         }
       }
     }
