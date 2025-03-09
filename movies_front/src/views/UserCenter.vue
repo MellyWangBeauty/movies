@@ -266,9 +266,9 @@ const initCharts = (reviews) => {
       },
     },
     grid: {
-      top: 50,
+      top: 60,
       bottom: 30,
-      left: '15%',
+      left: '10%',
       right: '15%',
       containLabel: true
     },
