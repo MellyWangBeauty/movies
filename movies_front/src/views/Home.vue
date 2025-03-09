@@ -20,7 +20,7 @@
           more-link="/rank" 
         />
         <MovieSection 
-          title="个性推荐" 
+          title="随机推荐" 
           :movies="recommendedMovies" 
           more-link="/recommend" 
         />
