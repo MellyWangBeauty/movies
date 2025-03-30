@@ -8,6 +8,7 @@
       <router-link to="/hot">热门</router-link>
       <router-link to="/rank">排行</router-link>
       <router-link to="/recommend">推荐</router-link>
+      <router-link to="/statistics">统计</router-link>
     </div>
     <div class="header-right">
       <div>
@@ -72,7 +73,7 @@
     </div>
 
     <!-- 登录注册弹框 -->
-    <LoginDialog v-model:visible="loginDialogVisible" :initial-mode="dialogMode" />
+    <LoginDialog :visible="loginDialogVisible" @update:visible="loginDialogVisible = $event" :initial-mode="dialogMode" />
   </div>
 </template>
 

@@ -45,6 +45,12 @@ const router = createRouter({
       path: '/search',
       name: 'Search',
       component: () => import('../views/Search.vue')
+    },
+    //统计
+    {
+      path:'/statistics',
+      name:'statistics',
+      component:()=>import('../views/Statistics.vue')
     }
   ]
 })
