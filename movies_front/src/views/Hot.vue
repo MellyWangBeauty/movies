@@ -1,83 +1,13 @@
 <template>
-  <div class="hot-movies">
-    <div class="content">
-      <h1 class="page-title">热门电影</h1>
-      <div v-if="loading" class="loading-container">
-        <el-skeleton :rows="5" animated />
-      </div>
-      <div v-else-if="error" class="error-container">
-        <el-empty :description="error" />
-      </div>
-      <div v-else>
-        <MovieFilter 
-          :movies="movies" 
-          @filter="handleFilter"
-        />
-        <div class="movie-grid">
-          <MovieCard 
-            v-for="movie in displayedMovies" 
-            :key="movie.id" 
-            :movie="movie"
-          />
-        </div>
-        <MoviePagination 
-          :total="filteredMovies.length"
-          @update="handlePagination"
-        />
-      </div>
-    </div>
-  </div>
+  <BaseMovieList
+    title="热门电影"
+    api-endpoint="/api/movies/hot"
+    error-message="获取热门电影失败"
+  />
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import MovieCard from '../components/MovieCard.vue'
-import MovieFilter from '../components/MovieFilter.vue'
-import MoviePagination from '../components/MoviePagination.vue'
-
-const movies = ref([])
-const filteredMovies = ref([])
-const loading = ref(true)
-const error = ref(null)
-const paginationInfo = ref({
-  start: 0,
-  end: 25,
-  pageSize: 25
-})
-
-const displayedMovies = computed(() => {
-  return filteredMovies.value.slice(paginationInfo.value.start, paginationInfo.value.end)
-})
-
-const handleFilter = (filtered) => {
-  filteredMovies.value = filtered
-}
-
-const handlePagination = (info) => {
-  paginationInfo.value = info
-}
-
-const fetchMovies = async () => {
-  loading.value = true
-  error.value = null
-  
-  try {
-    const response = await axios.get('/api/movies/hot')
-    movies.value = response.data
-    filteredMovies.value = response.data
-  } catch (err) {
-    console.error('获取热门电影失败:', err)
-    error.value = '获取电影数据失败，请刷新重试'
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchMovies()
-})
+import BaseMovieList from '../components/BaseMovieList.vue'
 </script>
 
 <style lang="scss" scoped>
