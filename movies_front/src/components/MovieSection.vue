@@ -42,7 +42,6 @@ defineProps({
   margin-bottom: 40px;
 
   .section-header {
-
     margin: 20px 60px;
     display: flex;
     justify-content: space-between;
@@ -75,24 +74,27 @@ defineProps({
 
   .movie-grid {
     display: grid;
-    grid-template-columns: repeat(6, 180px);
+    grid-template-columns: repeat(auto-fit, 180px);
     gap: 24px;
     justify-content: center;
+    padding: 0 60px;
+    max-width: 1400px;
+    margin: 0 auto;
 
     @media (max-width: 1280px) {
-      grid-template-columns: repeat(5, 180px);
+      max-width: 1100px;
     }
 
     @media (max-width: 1080px) {
-      grid-template-columns: repeat(4, 180px);
+      max-width: 900px;
     }
 
     @media (max-width: 880px) {
-      grid-template-columns: repeat(3, 180px);
+      max-width: 700px;
     }
 
     @media (max-width: 680px) {
-      grid-template-columns: repeat(2, 180px);
+      max-width: 500px;
     }
   }
 }
