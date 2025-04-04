@@ -27,7 +27,7 @@ const props = defineProps({
 const emit = defineEmits(['update'])
 
 const currentPage = ref(1)
-const pageSize = ref(25)
+const pageSize = ref(30)
 
 const pageCount = computed(() => {
   return Math.ceil(props.total / pageSize.value)
