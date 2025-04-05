@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import users, movies, reviews
 from .database import engine
 from .models import user, movie, review
+from statistics.movie_analysis import get_analysis_data
 
 # 创建数据库表 - 添加 checkfirst=True 参数
 user.Base.metadata.create_all(bind=engine, checkfirst=True)
@@ -33,4 +34,14 @@ app.add_middleware(
 # 注册路由
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
-app.include_router(reviews.router, prefix="/api/reviews", tags=["reviews"]) 
+app.include_router(reviews.router, prefix="/api/reviews", tags=["reviews"])
+
+@app.get("/api/statistics")
+async def get_statistics():
+    """获取电影统计数据"""
+    try:
+        data = get_analysis_data()
+        return data
+    except Exception as e:
+        print(f"获取统计数据失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) 
