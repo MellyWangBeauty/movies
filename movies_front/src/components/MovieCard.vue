@@ -1,6 +1,6 @@
 <template>
   <div class="movie-card">
-    <router-link :to="`/movie/${movie.id}`">
+    <router-link :to="`/movie/${movie.id}`" @click="handleClick">
       <el-image 
         :src="movie.cover_image" 
         :alt="movie.title"
@@ -21,12 +21,20 @@
 <script setup>
 import { Picture, View } from '@element-plus/icons-vue'
 
-defineProps({
+const props = defineProps({
   movie: {
     type: Object,
     required: true
   }
 })
+
+const handleClick = () => {
+  console.log('Movie clicked:', {
+    id: props.movie.id,
+    title: props.movie.title,
+    fullMovie: props.movie
+  })
+}
 </script>
 
 <style lang="scss" scoped>

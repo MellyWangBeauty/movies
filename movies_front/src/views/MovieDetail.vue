@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import axios from 'axios'
@@ -96,6 +96,18 @@ import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const movie = ref(null)
+
+// 监听路由参数变化
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      console.log('Movie ID changed to:', newId)
+      fetchMovieDetail()
+      fetchReview()
+    }
+  }
+)
 
 const movieTags = computed(() => {
   if (!movie.value?.tags) return []
@@ -220,7 +232,9 @@ const fetchReview = async () => {
 
 const fetchMovieDetail = async () => {
   try {
+    console.log('Fetching movie detail for ID:', route.params.id)
     const response = await axios.get(`/api/movies/${route.params.id}`)
+    console.log('Movie detail response:', response.data)
     movie.value = response.data
   } catch (error) {
     console.error('Error fetching movie details:', error)
@@ -228,6 +242,7 @@ const fetchMovieDetail = async () => {
 }
 
 onMounted(() => {
+  console.log('MovieDetail mounted, route params:', route.params)
   fetchMovieDetail()
   fetchReview()
 })
