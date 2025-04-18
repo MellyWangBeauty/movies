@@ -102,6 +102,11 @@ export const useUserStore = defineStore('user', () => {
     return !!token.value
   }
 
+  // 检查是否是超级管理员
+  const isSuperUser = () => {
+    return isLoggedIn() && userInfo.value?.is_superuser === true
+  }
+
   // 初始化store
   initializeStore()
 
@@ -113,6 +118,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     fetchUserInfo,
     updateUserInfo,
-    isLoggedIn
+    isLoggedIn,
+    isSuperUser
   }
 }) 

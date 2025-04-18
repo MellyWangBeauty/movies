@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import users, movies, reviews
+from .routers import users, movies, reviews, admin
 from .database import engine
 from .models import user, movie, review
 from statistics.movie_analysis import get_analysis_data
@@ -35,6 +35,7 @@ app.add_middleware(
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
 app.include_router(reviews.router, prefix="/api/reviews", tags=["reviews"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 @app.get("/api/statistics")
 async def get_statistics():

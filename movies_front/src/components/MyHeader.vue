@@ -9,6 +9,7 @@
       <router-link to="/rank">排行</router-link>
       <router-link to="/recommend">推荐</router-link>
       <router-link to="/statistics">统计</router-link>
+      <router-link v-if="userStore.isSuperUser()" to="/admin">管理</router-link>
     </div>
     <div class="header-right">
       <div>

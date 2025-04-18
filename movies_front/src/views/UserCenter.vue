@@ -395,6 +395,9 @@ onMounted(() => {
   padding: 0 20px 20px 20px;
   color: #fff;
   background-color: rgba(255, 255, 255, 0.02);
+  margin: 0 auto; /* 添加自动外边距使其居中 */
+  width: 100%; /* 确保宽度为100% */
+  box-sizing: border-box; /* 确保padding不会导致总宽度超过100% */
 
   .charts-container {
     display: grid;
