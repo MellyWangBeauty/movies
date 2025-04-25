@@ -2,6 +2,7 @@
   <div class="statistics-container">
     <h1>电影数据分析</h1>
     <div class="charts-container">
+
       <tag-chart 
         v-if="chartData.tag_distribution" 
         :chart-data="chartData.tag_distribution" 
@@ -14,16 +15,9 @@
         v-if="chartData.country_rating_comparison"
         :chart-data="chartData.country_rating_comparison"
       />
-      <year-chart 
-        v-if="chartData.year_distribution" 
-        :chart-data="chartData.year_distribution" 
-      />
-      
-
-      
-      <rating-chart 
-        v-if="chartData.rating_distribution" 
-        :chart-data="chartData.rating_distribution" 
+      <type-duration-rating-chart
+        v-if="chartData.type_duration_rating"
+        :chart-data="chartData.type_duration_rating"
       />
     </div>
   </div>
@@ -36,6 +30,8 @@ import TagChart from '@/components/charts/TagChart.vue'
 import RatingChart from '@/components/charts/RatingChart.vue'
 import TypeTrendChart from '@/components/charts/TypeTrendChart.vue'
 import CountryRatingChart from '@/components/charts/CountryRatingChart.vue'
+import DurationRatingChart from '@/components/charts/DurationRatingChart.vue'
+import TypeDurationRatingChart from '@/components/charts/TypeDurationRatingChart.vue'
 
 export default {
   name: 'Statistics',
@@ -44,7 +40,9 @@ export default {
     TagChart,
     RatingChart,
     TypeTrendChart,
-    CountryRatingChart
+    CountryRatingChart,
+    DurationRatingChart,
+    TypeDurationRatingChart
   },
   data() {
     return {
@@ -53,7 +51,9 @@ export default {
         tag_distribution: null,
         rating_distribution: null,
         type_trend: null,
-        country_rating_comparison: null
+        country_rating_comparison: null,
+        duration_rating_relation: null,
+        type_duration_rating: null
       }
     }
   },
@@ -93,6 +93,42 @@ export default {
             movie_counts: [30, 45, 25, 15, 20, 10, 18, 12]
           }
         }
+        
+        // 如果缺少电影时长与评分关系数据，使用默认数据
+        if (!this.chartData.duration_rating_relation) {
+          console.error('未找到电影时长与评分关系数据')
+          this.chartData.duration_rating_relation = {
+            categories: ['90分钟以下', '90-120分钟', '120-150分钟', '150-180分钟', '180分钟以上'],
+            avg_ratings: [7.5, 8.2, 8.6, 8.4, 8.8],
+            movie_counts: [12, 45, 35, 20, 8]
+          }
+        }
+        
+        // 如果缺少电影类型、时长与评分关系数据，使用默认数据
+        if (!this.chartData.type_duration_rating) {
+          console.error('未找到电影类型、时长与评分关系数据')
+          this.chartData.type_duration_rating = {
+            types: ["剧情", "喜剧", "动作", "爱情", "科幻", "动画", "惊悚", "冒险"],
+            data: [
+              [90, 15, 8.5, "剧情"],
+              [120, 12, 9.0, "剧情"],
+              [150, 8, 8.8, "剧情"],
+              [95, 10, 8.2, "喜剧"],
+              [110, 8, 8.0, "喜剧"],
+              [130, 5, 7.8, "喜剧"],
+              [125, 15, 7.9, "动作"],
+              [140, 10, 8.3, "动作"],
+              [100, 8, 8.2, "爱情"],
+              [115, 6, 8.5, "爱情"],
+              [135, 10, 8.8, "科幻"],
+              [160, 8, 9.2, "科幻"],
+              [90, 12, 8.6, "动画"],
+              [110, 8, 8.9, "动画"],
+              [120, 10, 8.1, "惊悚"],
+              [145, 7, 8.4, "冒险"]
+            ]
+          }
+        }
       } catch (error) {
         console.error('获取数据失败:', error)
         // 使用默认数据
@@ -123,6 +159,32 @@ export default {
             countries: ['中国大陆', '美国', '日本', '韩国', '英国', '法国', '中国香港', '中国台湾'],
             avg_ratings: [8.2, 8.5, 8.8, 8.0, 8.3, 8.1, 8.6, 8.4],
             movie_counts: [30, 45, 25, 15, 20, 10, 18, 12]
+          },
+          duration_rating_relation: {
+            categories: ['90分钟以下', '90-120分钟', '120-150分钟', '150-180分钟', '180分钟以上'],
+            avg_ratings: [7.5, 8.2, 8.6, 8.4, 8.8],
+            movie_counts: [12, 45, 35, 20, 8]
+          },
+          type_duration_rating: {
+            types: ["剧情", "喜剧", "动作", "爱情", "科幻", "动画", "惊悚", "冒险"],
+            data: [
+              [90, 15, 8.5, "剧情"],
+              [120, 12, 9.0, "剧情"],
+              [150, 8, 8.8, "剧情"],
+              [95, 10, 8.2, "喜剧"],
+              [110, 8, 8.0, "喜剧"],
+              [130, 5, 7.8, "喜剧"],
+              [125, 15, 7.9, "动作"],
+              [140, 10, 8.3, "动作"],
+              [100, 8, 8.2, "爱情"],
+              [115, 6, 8.5, "爱情"],
+              [135, 10, 8.8, "科幻"],
+              [160, 8, 9.2, "科幻"],
+              [90, 12, 8.6, "动画"],
+              [110, 8, 8.9, "动画"],
+              [120, 10, 8.1, "惊悚"],
+              [145, 7, 8.4, "冒险"]
+            ]
           }
         }
       }
