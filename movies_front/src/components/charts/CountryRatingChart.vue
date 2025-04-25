@@ -1,6 +1,6 @@
 <template>
   <div class="chart-container">
-    <h2>不同地区电影平均评分对比</h2>
+    <h2>不同地区电影评分对比</h2>
     <div ref="chartRef" class="chart"></div>
   </div>
 </template>
@@ -50,7 +50,7 @@ export default {
           formatter: (params) => {
             const country = params[0].name
             const rating = params[0].value
-            const count = this.chartData.movie_counts[params[0].dataIndex]
+            const count = data.counts[params[0].dataIndex]
             return `${country}<br/>平均评分: ${rating}<br/>电影数量: ${count}`
           },
           textStyle: {
@@ -66,7 +66,7 @@ export default {
           left: '3%',
           right: '4%',
           bottom: '3%',
-          top: '15%',
+          top: '20%',
           containLabel: true
         },
         xAxis: [{
@@ -93,8 +93,9 @@ export default {
             color: '#fff',
             fontSize: 14
           },
-          min: Math.floor(Math.min(...data.ratings) * 0.9),
-          max: Math.ceil(Math.max(...data.ratings) * 1.1),
+          min: 7.5,
+          max: 8.7,
+          interval: 0.2,
           axisLabel: {
             color: '#fff',
             fontSize: 12,
@@ -143,42 +144,102 @@ export default {
       this.chart.setOption(option)
     },
     processData() {
-      // 确保数据按照评分从高到低排序
-      const indices = Array.from(
-        { length: this.chartData.countries.length },
-        (_, i) => i
-      )
+      // 对国家/地区进行分类和处理
+      let processedData = this.groupAndProcessCountries();
       
       // 按评分从高到低排序
-      indices.sort((a, b) => this.chartData.avg_ratings[b] - this.chartData.avg_ratings[a])
+      processedData.sort((a, b) => b.rating - a.rating);
       
-      // 选择前8个国家/地区
-      const topIndices = indices.slice(0, 8)
+      // 不再限制为前8个，而是使用所有处理后的目标区域
+      const topRegions = processedData;
       
       // 整理数据
-      const countries = topIndices.map(i => this.chartData.countries[i])
-      const ratings = topIndices.map(i => this.chartData.avg_ratings[i])
+      const countries = topRegions.map(item => item.name);
+      const ratings = topRegions.map(item => item.rating);
+      const counts = topRegions.map(item => item.count);
       
       return {
         countries,
-        ratings
+        ratings,
+        counts
       }
     },
     
-    getItemColor(index) {
-      // 为每个柱子定义不同的颜色
-      const colors = [
-        '#3D5A80', // 蓝色
-        '#4ECDC4', // 青色
-        '#FFD166', // 黄色
-        '#6A0572', // 紫色
-        '#1A936F', // 绿色
-        '#FF6B6B', // 红色
-        '#F18F01', // 橙色
-        '#8338EC'  // 紫色
-      ];
+    groupAndProcessCountries() {
+      // 指定要比较的区域列表
+      const targetRegions = ['中国大陆', '中国香港', '中国台湾', '美国', '日本', '韩国', '英国', '法国'];
       
-      return colors[index % colors.length];
+      // 按区域分类并合并数据
+      const regionMap = {
+        '中国大陆': '中国大陆',
+        '中国香港': '中国香港',
+        '中国台湾': '中国台湾',
+        '香港': '中国香港',
+        '台湾': '中国台湾',
+        '中国': '中国大陆',
+        '美国': '美国',
+        '日本': '日本',
+        '韩国': '韩国',
+        '英国': '英国',
+        '法国': '法国'
+      };
+      
+      const regions = {};
+      
+      // 初始化目标区域
+      targetRegions.forEach(region => {
+        regions[region] = {
+          name: region,
+          rating: 0,
+          count: 0,
+          total: 0
+        };
+      });
+      
+      // 遍历原始数据，按区域分组，只处理目标区域
+      for (let i = 0; i < this.chartData.countries.length; i++) {
+        let country = this.chartData.countries[i];
+        let rating = this.chartData.avg_ratings[i];
+        let count = this.chartData.movie_counts[i];
+        
+        // 尝试匹配区域
+        for (const [pattern, region] of Object.entries(regionMap)) {
+          if (country.includes(pattern) && targetRegions.includes(region)) {
+            // 累加该区域的评分和电影数量
+            regions[region].total += rating * count;
+            regions[region].count += count;
+            break;
+          }
+        }
+      }
+      
+      // 计算每个区域的平均评分
+      for (const region in regions) {
+        if (regions[region].count > 0) {
+          regions[region].rating = parseFloat((regions[region].total / regions[region].count).toFixed(1));
+        }
+      }
+      
+      // 过滤掉没有数据的区域
+      return Object.values(regions).filter(region => region.count > 0);
+    },
+    
+    getItemColor(index) {
+      // 为每个特定区域设置固定颜色
+      const regionColors = {
+        '中国大陆': '#FF6B6B', // 红色
+        '中国香港': '#FF9E80', // 橙红色
+        '中国台湾': '#EF476F', // 粉红色
+        '美国': '#3D5A80', // 深蓝色
+        '日本': '#FFD166', // 黄色
+        '韩国': '#06D6A0', // 绿松石色
+        '英国': '#4ECDC4', // 青色
+        '法国': '#8338EC'  // 紫色
+      };
+      
+      // 使用固定颜色映射
+      const region = this.processData().countries[index];
+      return regionColors[region] || '#78909C'; // 默认颜色为灰色
     }
   },
   watch: {
@@ -210,21 +271,21 @@ export default {
 
 h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   color: #fff;
   font-size: 20px;
   font-weight: bold;
 }
 
 .chart {
-  height: 400px;
+  height: 450px;
   width: 100%;
   box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
   .chart {
-    height: 350px;
+    height: 400px;
   }
   
   h2 {

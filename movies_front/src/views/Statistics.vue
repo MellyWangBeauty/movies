@@ -2,7 +2,6 @@
   <div class="statistics-container">
     <h1>电影数据分析</h1>
     <div class="charts-container">
-
       <tag-chart 
         v-if="chartData.tag_distribution" 
         :chart-data="chartData.tag_distribution" 
@@ -15,7 +14,7 @@
         v-if="chartData.country_rating_comparison"
         :chart-data="chartData.country_rating_comparison"
       />
-      <type-duration-rating-chart
+      <type-rating-scatter-chart
         v-if="chartData.type_duration_rating"
         :chart-data="chartData.type_duration_rating"
       />
@@ -25,34 +24,25 @@
 
 <script>
 import axios from 'axios'
-import YearChart from '@/components/charts/YearChart.vue'
 import TagChart from '@/components/charts/TagChart.vue'
-import RatingChart from '@/components/charts/RatingChart.vue'
 import TypeTrendChart from '@/components/charts/TypeTrendChart.vue'
 import CountryRatingChart from '@/components/charts/CountryRatingChart.vue'
-import DurationRatingChart from '@/components/charts/DurationRatingChart.vue'
-import TypeDurationRatingChart from '@/components/charts/TypeDurationRatingChart.vue'
+import TypeRatingScatterChart from '@/components/charts/TypeRatingScatterChart.vue'
 
 export default {
   name: 'Statistics',
   components: {
-    YearChart,
     TagChart,
-    RatingChart,
     TypeTrendChart,
     CountryRatingChart,
-    DurationRatingChart,
-    TypeDurationRatingChart
+    TypeRatingScatterChart
   },
   data() {
     return {
       chartData: {
-        year_distribution: null,
         tag_distribution: null,
-        rating_distribution: null,
         type_trend: null,
         country_rating_comparison: null,
-        duration_rating_relation: null,
         type_duration_rating: null
       }
     }
@@ -67,7 +57,11 @@ export default {
         const data = response.data
         console.log('收到的统计数据:', data)
         
-        this.chartData = data
+        // 只获取需要的数据
+        this.chartData.tag_distribution = data.tag_distribution;
+        this.chartData.type_trend = data.type_trend;
+        this.chartData.country_rating_comparison = data.country_rating_comparison;
+        this.chartData.type_duration_rating = data.type_duration_rating;
         
         // 如果缺少类型趋势数据，使用默认数据
         if (!this.chartData.type_trend) {
@@ -91,16 +85,6 @@ export default {
             countries: ['中国大陆', '美国', '日本', '韩国', '英国', '法国', '中国香港', '中国台湾'],
             avg_ratings: [8.2, 8.5, 8.8, 8.0, 8.3, 8.1, 8.6, 8.4],
             movie_counts: [30, 45, 25, 15, 20, 10, 18, 12]
-          }
-        }
-        
-        // 如果缺少电影时长与评分关系数据，使用默认数据
-        if (!this.chartData.duration_rating_relation) {
-          console.error('未找到电影时长与评分关系数据')
-          this.chartData.duration_rating_relation = {
-            categories: ['90分钟以下', '90-120分钟', '120-150分钟', '150-180分钟', '180分钟以上'],
-            avg_ratings: [7.5, 8.2, 8.6, 8.4, 8.8],
-            movie_counts: [12, 45, 35, 20, 8]
           }
         }
         
@@ -133,17 +117,9 @@ export default {
         console.error('获取数据失败:', error)
         // 使用默认数据
         this.chartData = {
-          year_distribution: {
-            years: ['2020', '2021', '2022', '2023', '2024'],
-            counts: [10, 15, 20, 25, 30]
-          },
           tag_distribution: {
             tags: ['动作', '爱情', '喜剧', '科幻', '动画'],
             counts: [30, 25, 20, 15, 10]
-          },
-          rating_distribution: {
-            ratings: ['7.0', '7.5', '8.0', '8.5', '9.0'],
-            counts: [5, 10, 20, 15, 8]
           },
           type_trend: {
             years: ['2020', '2021', '2022', '2023', '2024'],
@@ -159,11 +135,6 @@ export default {
             countries: ['中国大陆', '美国', '日本', '韩国', '英国', '法国', '中国香港', '中国台湾'],
             avg_ratings: [8.2, 8.5, 8.8, 8.0, 8.3, 8.1, 8.6, 8.4],
             movie_counts: [30, 45, 25, 15, 20, 10, 18, 12]
-          },
-          duration_rating_relation: {
-            categories: ['90分钟以下', '90-120分钟', '120-150分钟', '150-180分钟', '180分钟以上'],
-            avg_ratings: [7.5, 8.2, 8.6, 8.4, 8.8],
-            movie_counts: [12, 45, 35, 20, 8]
           },
           type_duration_rating: {
             types: ["剧情", "喜剧", "动作", "爱情", "科幻", "动画", "惊悚", "冒险"],
