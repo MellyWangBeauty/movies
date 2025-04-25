@@ -10,6 +10,10 @@
         v-if="chartData.type_trend" 
         :chart-data="chartData.type_trend" 
       />
+      <country-rating-chart
+        v-if="chartData.country_rating_comparison"
+        :chart-data="chartData.country_rating_comparison"
+      />
       <year-chart 
         v-if="chartData.year_distribution" 
         :chart-data="chartData.year_distribution" 
@@ -21,9 +25,6 @@
         v-if="chartData.rating_distribution" 
         :chart-data="chartData.rating_distribution" 
       />
-      
-
-      
     </div>
   </div>
 </template>
@@ -34,6 +35,7 @@ import YearChart from '@/components/charts/YearChart.vue'
 import TagChart from '@/components/charts/TagChart.vue'
 import RatingChart from '@/components/charts/RatingChart.vue'
 import TypeTrendChart from '@/components/charts/TypeTrendChart.vue'
+import CountryRatingChart from '@/components/charts/CountryRatingChart.vue'
 
 export default {
   name: 'Statistics',
@@ -41,7 +43,8 @@ export default {
     YearChart,
     TagChart,
     RatingChart,
-    TypeTrendChart
+    TypeTrendChart,
+    CountryRatingChart
   },
   data() {
     return {
@@ -49,7 +52,8 @@ export default {
         year_distribution: null,
         tag_distribution: null,
         rating_distribution: null,
-        type_trend: null
+        type_trend: null,
+        country_rating_comparison: null
       }
     }
   },
@@ -79,6 +83,16 @@ export default {
             ]
           }
         }
+        
+        // 如果缺少地区评分对比数据，使用默认数据
+        if (!this.chartData.country_rating_comparison) {
+          console.error('未找到地区评分对比数据')
+          this.chartData.country_rating_comparison = {
+            countries: ['中国大陆', '美国', '日本', '韩国', '英国', '法国', '中国香港', '中国台湾'],
+            avg_ratings: [8.2, 8.5, 8.8, 8.0, 8.3, 8.1, 8.6, 8.4],
+            movie_counts: [30, 45, 25, 15, 20, 10, 18, 12]
+          }
+        }
       } catch (error) {
         console.error('获取数据失败:', error)
         // 使用默认数据
@@ -104,6 +118,11 @@ export default {
               {name: '科幻', type: 'line', data: [3, 5, 7, 9, 12]},
               {name: '动画', type: 'line', data: [6, 8, 4, 7, 9]}
             ]
+          },
+          country_rating_comparison: {
+            countries: ['中国大陆', '美国', '日本', '韩国', '英国', '法国', '中国香港', '中国台湾'],
+            avg_ratings: [8.2, 8.5, 8.8, 8.0, 8.3, 8.1, 8.6, 8.4],
+            movie_counts: [30, 45, 25, 15, 20, 10, 18, 12]
           }
         }
       }

@@ -483,6 +483,40 @@ def analyze_type_trend() -> Dict[str, Any]:
         print(f"分析类型趋势失败: {str(e)}")
         return None
 
+def analyze_country_rating_comparison() -> Dict[str, Any]:
+    """分析不同地区电影的平均评分对比"""
+    try:
+        query = """
+            SELECT country, AVG(rating) as avg_rating, COUNT(*) as movie_count 
+            FROM movies_top250 
+            GROUP BY country 
+            HAVING COUNT(*) >= 3
+            ORDER BY avg_rating DESC
+        """
+        results = execute_query(query)
+        
+        # 转换为Echarts需要的格式
+        countries = []
+        avg_ratings = []
+        movie_counts = []
+        
+        for row in results:
+            countries.append(row[0])
+            avg_ratings.append(round(float(row[1]), 1))  # 保留一位小数
+            movie_counts.append(row[2])
+            
+        return {
+            "analysis_type": "country_rating_comparison",
+            "data": {
+                "countries": countries,
+                "avg_ratings": avg_ratings,
+                "movie_counts": movie_counts
+            }
+        }
+    except Exception as e:
+        print(f"分析地区评分对比失败: {str(e)}")
+        return None
+
 def save_analysis_result(analysis_result: Dict[str, Any]):
     """保存分析结果到数据库"""
     if not analysis_result:
@@ -529,7 +563,8 @@ def main():
             analyze_tag_distribution,
             analyze_rating_distribution,
             analyze_country_distribution,
-            analyze_type_trend
+            analyze_type_trend,
+            analyze_country_rating_comparison
         ]
         
         for analysis_func in analyses:
